@@ -92,19 +92,21 @@ public:
 	int y;
 	int w;
 	int h;
+	string index;
 	SDL_Color color;
 	string val;
 	SDL_Rect rect;
-	TTF_Font* numberFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 500);
+	TTF_Font* numberFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 200);
 	TTF_Font* letterFont = TTF_OpenFont("resources/Font/ClementFive.ttf", 500);
 	ArrayElement() { this->val = "N"; }
-	ArrayElement(int x, int y,int w,int h, SDL_Color color,string val) {
+	ArrayElement(int x, int y,int w,int h, SDL_Color color,string val,string index) {
 		this->x = x;
 		this->y = y;
 		this->w = w;
 		this->h = h;
 		this->color = color;
 		this->val = val;
+		this->index = index;
 	}
 	//~ArrayElement() { TTF_CloseFont(numberFont); TTF_CloseFont(letterFont); }
 
@@ -113,7 +115,8 @@ public:
 		SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
 		SDL_SetRenderDrawColor(gRenderer, color.r, color.g, color.b, color.a);
 		SDL_RenderDrawRect(gRenderer, createRect(&rect, x, y, w, h));
-		createText(numberFont, color, val, x + 10, y + 10, 30, 30);
+		createText(numberFont, color, val.size()==1 && val!="0" ? "0" + val : val, x + 10, y + 10, 30, 30);
+		createText(numberFont, color, index, x + 17, y + 60, 15, 20);
 		SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 	}
 	void changeColor(SDL_Color color) {
@@ -225,7 +228,7 @@ public:
 			arr[i] = ArrayElement();
 		}
 		for (int i = 0; i < n; i++) {
-			arr[i] = ArrayElement(100+i*50, 100, 50, 50, { 0,0,0 }, strArr[i]);
+			arr[i] = ArrayElement(100+i*50, 100, 50, 50, { 0,0,0 }, strArr[i],to_string(i));
 		}
 
 	}
@@ -234,7 +237,7 @@ public:
 		int currStep = 0;
 		vector<string> codeInsert = { "n++;", "for(int i=n-1;i>indexInsert;i--){","  arr[i]=arr[i-1];","}","arr[indexInsert]=valueInsert;" };
 		n++;
-		arr[n - 1] = ArrayElement(100 + (n - 1) * 50, 100, 50, 50, YELLOW, "0");
+		arr[n - 1] = ArrayElement(100 + (n - 1) * 50, 100, 50, 50, YELLOW, "0",to_string(n-1));
 		currStep++;
 		if (currStep == step) { linesDisplay = 0; globalCode = codeInsert; return; }
 
@@ -258,7 +261,7 @@ public:
 		vector<string> codeInsert = { "n++;", "for(int i=n-1;i>indexInsert;i--){","  arr[i]=arr[i-1];","}","arr[indexInsert]=valueInsert;" };
 		
 		n++;
-		arr[n-1] = ArrayElement(100 + (n-1) * 50, 100, 50, 50, { 255,255,0 }, "0");
+		arr[n-1] = ArrayElement(100 + (n-1) * 50, 100, 50, 50, { 255,255,0 }, "0",to_string(n-1));
 		updateFrame(1, codeInsert, 0);
 		
 		for (int i = n-1; i > idx; i--) {
@@ -491,7 +494,7 @@ tuple <int, string, bool,bool> insertFormInput() {
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
-				if (e.button.x > 156 && e.button.x < 763 && e.button.y > 176 && e.button.y < 233) activeField = 1;
+				if (e.button.x > 169 && e.button.x < 794 && e.button.y > 228 && e.button.y < 299) activeField = 1;
 				else activeField = 0;
 				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 375 && e.button.y < 441) { quit = true; checkStep = true; }
 				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 500 && e.button.y < 566) {
@@ -571,6 +574,8 @@ void arrayVisualizing() {
 				if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray=initializeFormInput();
 					arrayVisualizer.initialize(tempArray);
+					globalCode = {};
+					linesDisplay = -1;
 				}
 				else if (e.button.x > 200 && e.button.x < 400 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
