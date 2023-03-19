@@ -154,6 +154,17 @@ public:
 		maxStep = 1000;
 		for (int i = 0; i < 100; i++) arr[i] = ArrayElement();
 	}
+	void resetStep() {
+		for (int i = 0; i < 100; i++) {
+			if (arr[i].val == "N") break;
+			arr[i].changeColor(BLACK);
+		}
+		stepInsert = -1;
+		stepDelete = -1;
+		stepSearch = -1;
+		stepUpdate = -1;
+		maxStep = 1000;
+	}
 	void visualize() {
 		for (int i = 0; i < 100; i++) {
 			if (arr[i].val=="N") break;
@@ -204,6 +215,20 @@ public:
 					delay = 0;
 				}		
 			}
+			else if (stepDelete >= 0) {
+				stepDelete = max(stepDelete - 1, 0);
+				if (stepDelete > 0) {
+					delIndexStep(idx, stepDelete, n + 1);
+					delay = 0;
+				}
+			}
+			else if (stepSearch >= 0) {
+				stepSearch = max(stepSearch - 1, 0);
+				if (stepSearch > 0) {
+					searchStep(val, stepSearch, n);
+					delay = 0;
+				}
+			}
 
 			return true;
 		}
@@ -211,6 +236,16 @@ public:
 			if (stepInsert >= 0) {
 				stepInsert = min(stepInsert+1, maxStep);
 				insertStep(idx, val, stepInsert,n-1);
+				delay = 0;
+			}
+			else if (stepDelete >= 0) {
+				stepDelete = min(stepDelete + 1, maxStep);
+				delIndexStep(idx, stepDelete, n + 1);
+				delay = 0;
+			}
+			else if (stepSearch >= 0) {
+				stepSearch = min(stepSearch + 1, maxStep);
+				searchStep(val, stepSearch, n );
 				delay = 0;
 			}
 			return true;
@@ -319,28 +354,47 @@ public:
 
 
 	}
-	void delValue(string val) {
-		int idx = search(val);
-		SDL_Delay(500);
-		if (idx != -1) {
-			delIndex(idx);
-		}
-	}
-	int search(string val) {
-		bool found = false;
+	void searchStep(string val, int step,int n) {
+		for (int i = 0; i < 100; i++) arr[i] = tempArr[i];
+		int currStep = 0;
+		vector<string> codeSearch = { "for(int i=0;i<n;i++){", "    if(arr[i]==target){","        targetIndex=i;","        break; }","    else continue;","}" };
 		for (int i = 0; i < n; i++) {
+			currStep++;
+			if (currStep == step) { linesDisplay = 0; globalCode = codeSearch; return; }
 			if (arr[i].val == val) {
+				currStep++;
+				if (currStep == step) { linesDisplay = 1; globalCode = codeSearch; return; }
 				arr[i].changeColor(GREEN);
-				found = true;
-				updateFrame(1);
+				currStep++;
+				if (currStep == step) { linesDisplay = 2; globalCode = codeSearch; return; }
 				arr[i].changeColor(BLACK);
-				return i;
+				currStep++;
+				if (currStep == step) { linesDisplay = 3; globalCode = codeSearch; maxStep = currStep; return; }
+				return;
 			}
 			else arr[i].changeColor(RED);
-			updateFrame(1);
+			currStep++;
+			if (currStep == step) { linesDisplay = 4; globalCode = codeSearch; return; }
 			arr[i].changeColor(BLACK);
 		}
-		return -1;
+		maxStep = currStep;
+	}
+	void search(string val) {
+		vector<string> codeSearch = { "for(int i=0;i<n;i++){", "    if(arr[i]==target){","        targetIndex=i;","        break; }","    else continue;","}"};
+		for (int i = 0; i < n; i++) {
+			updateFrame(1, codeSearch, 0);
+			if (arr[i].val == val) {
+				updateFrame(1, codeSearch, 1);
+				arr[i].changeColor(GREEN);
+				updateFrame(1, codeSearch, 2);
+				arr[i].changeColor(BLACK);
+				updateFrame(1, codeSearch, 3);
+				return;
+			}
+			else arr[i].changeColor(RED);
+			updateFrame(1, codeSearch, 4);
+			arr[i].changeColor(BLACK);
+		}
 
 	}
 	void update(int idx, string val) {
@@ -450,10 +504,10 @@ vector<string> initializeFormInput() {
 
 }
 
-tuple <int, string, bool,bool> insertFormInput() {
+tuple <int, string, bool,bool> indexValueFormInput(string formName) {
 	SDL_Rect rect;
 	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
-	SDL_Texture* form = loadImgTexture("resources/Form/InsertForm.png");
+	SDL_Texture* form = loadImgTexture("resources/Form/"+formName);
 	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
 	SDL_Rect buttonPosArray[2][2];
 	vector<string> ans;
@@ -523,6 +577,145 @@ tuple <int, string, bool,bool> insertFormInput() {
 	else return make_tuple(0, "-1", false, false);
 
 }
+tuple <int, bool, bool> indexFormInput(string formName) {
+	SDL_Rect rect;
+	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
+	SDL_Texture* form = loadImgTexture("resources/Form/"+formName);
+	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
+	SDL_Rect buttonPosArray[2][2];
+	vector<string> ans;
+	bool checkStep = false;
+	for (int i = 0; i < 2; i++) {
+		buttonPosArray[i][0] = *createRect(&rect, 909, 1330 + 144 * i, 200, 66);
+		buttonPosArray[i][1] = *createRect(&rect, 639, 1330 + 144 * i, 200, 66);
+	}
+	bool quit = false;
+	bool leftMouseDown = false;
+	int activeField = 0;
+	string text1 = "";
+	SDL_Event e;
+	SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+	SDL_StartTextInput();
+	while (!quit) {
+		SDL_RenderClear(gRenderer);
+		SDL_RenderCopy(gRenderer, form, NULL, createRect(&rect, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 375, 200, 66, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 200, 66, NULL);
+		createText(generalFont, { 0 , 0 , 0 }, text1, 183, 246, text1.size() * 20, 40);
+		if (SDL_GetTicks64() % 1000 >= 500) {
+			switch (activeField) {
+			case 1:
+				SDL_RenderDrawLine(gRenderer, 183 + text1.size() * 20, 246, 183 + text1.size() * 20, 283);
+				break;
+			}
+		}
+		leftMouseDown = false;
+		if (SDL_PollEvent(&e)) {
+			switch (e.type) {
+			case SDL_QUIT:
+				quit = true;
+				quitGame();
+				break;
+			case SDL_TEXTINPUT:
+				if (activeField == 1) text1 += e.text.text;
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				leftMouseDown = true;
+				if (e.button.x > 169 && e.button.x < 794 && e.button.y > 228 && e.button.y < 299) activeField = 1;
+				else activeField = 0;
+				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 375 && e.button.y < 441) { quit = true; checkStep = true; }
+				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 500 && e.button.y < 566) {
+					quit = true;
+				}
+			case SDL_KEYDOWN:
+				if (e.key.keysym.sym == SDLK_BACKSPACE) {
+					if (activeField == 1 && text1.size() != 0) text1.pop_back();
+				}
+			}
+		}
+		SDL_RenderPresent(gRenderer);
+	}
+	SDL_StopTextInput();
+
+	SDL_DestroyTexture(buttonSpriteSheet);
+	SDL_DestroyTexture(form);
+	TTF_CloseFont(generalFont);
+	if (text1 != "") {
+		int idx = stoi(text1);
+		return make_tuple(idx, checkStep, true);
+	}
+	else return make_tuple(0, false, false);
+
+}
+tuple <string, bool, bool> valueFormInput(string formName) {
+	SDL_Rect rect;
+	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
+	SDL_Texture* form = loadImgTexture("resources/Form/" + formName);
+	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
+	SDL_Rect buttonPosArray[2][2];
+	vector<string> ans;
+	bool checkStep = false;
+	for (int i = 0; i < 2; i++) {
+		buttonPosArray[i][0] = *createRect(&rect, 909, 1330 + 144 * i, 200, 66);
+		buttonPosArray[i][1] = *createRect(&rect, 639, 1330 + 144 * i, 200, 66);
+	}
+	bool quit = false;
+	bool leftMouseDown = false;
+	int activeField = 0;
+	string text1 = "";
+	SDL_Event e;
+	SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+	SDL_StartTextInput();
+	while (!quit) {
+		SDL_RenderClear(gRenderer);
+		SDL_RenderCopy(gRenderer, form, NULL, createRect(&rect, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 375, 200, 66, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 200, 66, NULL);
+		createText(generalFont, { 0 , 0 , 0 }, text1, 183, 246, text1.size() * 20, 40);
+		if (SDL_GetTicks64() % 1000 >= 500) {
+			switch (activeField) {
+			case 1:
+				SDL_RenderDrawLine(gRenderer, 183 + text1.size() * 20, 246, 183 + text1.size() * 20, 283);
+				break;
+			}
+		}
+		leftMouseDown = false;
+		if (SDL_PollEvent(&e)) {
+			switch (e.type) {
+			case SDL_QUIT:
+				quit = true;
+				quitGame();
+				break;
+			case SDL_TEXTINPUT:
+				if (activeField == 1) text1 += e.text.text;
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				leftMouseDown = true;
+				if (e.button.x > 169 && e.button.x < 794 && e.button.y > 228 && e.button.y < 299) activeField = 1;
+				else activeField = 0;
+				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 375 && e.button.y < 441) { quit = true; checkStep = true; }
+				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 500 && e.button.y < 566) {
+					quit = true;
+				}
+			case SDL_KEYDOWN:
+				if (e.key.keysym.sym == SDLK_BACKSPACE) {
+					if (activeField == 1 && text1.size() != 0) text1.pop_back();
+				}
+			}
+		}
+		SDL_RenderPresent(gRenderer);
+	}
+	SDL_StopTextInput();
+
+	SDL_DestroyTexture(buttonSpriteSheet);
+	SDL_DestroyTexture(form);
+	TTF_CloseFont(generalFont);
+	if (text1 != "") {
+		return make_tuple(text1, checkStep, true);
+	}
+	else return make_tuple("0", false, false);
+
+}
 
 void arrayVisualizing() {
 	SDL_Event e;
@@ -573,6 +766,7 @@ void arrayVisualizing() {
 				leftMouseDown = true;
 				if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray=initializeFormInput();
+					arrayVisualizer.resetStep();
 					arrayVisualizer.initialize(tempArray);
 					globalCode = {};
 					linesDisplay = -1;
@@ -580,10 +774,10 @@ void arrayVisualizing() {
 				else if (e.button.x > 200 && e.button.x < 400 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, val, checkStep, isValid) = insertFormInput();
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png");
+					arrayVisualizer.resetStep();
 					globalCode = {};
 					linesDisplay = -1;
-					arrayVisualizer.maxStep = 1000;
 					if (isValid) {
 						if (checkStep) {
 							arrayVisualizer.n++;
@@ -593,6 +787,45 @@ void arrayVisualizing() {
 						}
 						else {
 							arrayVisualizer.insert(idx, val);
+						}
+					}
+				}
+				else if (e.button.x > 400 && e.button.x < 600 && e.button.y > 530 && e.button.y < 630) {
+					bool checkStep;
+					bool isValid;
+					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png");
+					arrayVisualizer.resetStep();
+					globalCode = {};
+					linesDisplay = -1;
+					arrayVisualizer.maxStep = 1000;
+					if (isValid) {
+						if (checkStep) {
+							arrayVisualizer.n--;
+							arrayVisualizer.stepDelete = 0;
+							for (int i = 0; i < 100; i++)
+								arrayVisualizer.tempArr[i] = arrayVisualizer.arr[i];
+						}
+						else {
+							arrayVisualizer.delIndex(idx);
+						}
+					}
+				}
+				else if (e.button.x > 600 && e.button.x < 800 && e.button.y > 530 && e.button.y < 630) {
+					bool checkStep;
+					bool isValid;
+					tie(val, checkStep, isValid) = valueFormInput("SearchForm.png");
+					arrayVisualizer.resetStep();
+					globalCode = {};
+					linesDisplay = -1;
+					arrayVisualizer.maxStep = 1000;
+					if (isValid) {
+						if (checkStep) {
+							arrayVisualizer.stepSearch = 0;
+							for (int i = 0; i < 100; i++)
+								arrayVisualizer.tempArr[i] = arrayVisualizer.arr[i];
+						}
+						else {
+							arrayVisualizer.search(val);
 						}
 					}
 				}
