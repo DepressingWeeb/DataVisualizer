@@ -229,6 +229,13 @@ public:
 					delay = 0;
 				}
 			}
+			else if (stepUpdate >= 0) {
+				stepUpdate = max(stepUpdate - 1, 0);
+				if (stepUpdate > 0) {
+					updateStep(idx,val, stepUpdate, n);
+					delay = 0;
+				}
+			}
 
 			return true;
 		}
@@ -246,6 +253,11 @@ public:
 			else if (stepSearch >= 0) {
 				stepSearch = min(stepSearch + 1, maxStep);
 				searchStep(val, stepSearch, n );
+				delay = 0;
+			}
+			else if (stepUpdate >= 0) {
+				stepUpdate = min(stepUpdate + 1, maxStep);
+				updateStep(idx, val, stepUpdate, n);
 				delay = 0;
 			}
 			return true;
@@ -397,10 +409,24 @@ public:
 		}
 
 	}
-	void update(int idx, string val) {
+	void updateStep(int idx, string val,int step, int n) {
+		for (int i = 0; i < 100; i++) arr[i] = tempArr[i];
+		int currStep = 0;
+		vector<string> codeUpdate = { "arr[indexUpdate]=valueUpdate;" };
 		arr[idx].val = val;
 		arr[idx].changeColor(GREEN);
-		updateFrame(1);
+		currStep++;
+		if (currStep == step) { linesDisplay = 0; globalCode = codeUpdate; return; }
+		arr[idx].changeColor(BLACK);
+		globalCode = codeUpdate;
+		linesDisplay = -1;
+		maxStep = 2;
+	}
+	void update(int idx, string val) {
+		vector<string> codeUpdate = {"arr[indexUpdate]=valueUpdate;"};
+		arr[idx].val = val;
+		arr[idx].changeColor(GREEN);
+		updateFrame(1, codeUpdate, 0);
 		arr[idx].changeColor(BLACK);
 	}
 };
@@ -427,7 +453,7 @@ vector<string> initializeFormInput() {
 	SDL_StartTextInput();
 	while (!quit) {
 		SDL_RenderClear(gRenderer);
-		SDL_RenderCopy(gRenderer,form , NULL, createRect(&rect, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+		SDL_RenderCopy(gRenderer,form , NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 385, 150, 75, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[7][0], &buttonPosArray[7][1], leftMouseDown, 370, 500, 150, 75, NULL);
 		createText(generalFont, { 0 , 0 , 0 }, text1,170, 184, text1.size() * 20,40);
@@ -525,7 +551,7 @@ tuple <int, string, bool,bool> indexValueFormInput(string formName) {
 	SDL_StartTextInput();
 	while (!quit) {
 		SDL_RenderClear(gRenderer);
-		SDL_RenderCopy(gRenderer, form, NULL, createRect(&rect, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+		SDL_RenderCopy(gRenderer, form, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 375, 200, 66, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 200, 66, NULL);
 		createText(generalFont, { 0 , 0 , 0 }, text1, 183, 246, text1.size() * 20, 40);
@@ -598,7 +624,7 @@ tuple <int, bool, bool> indexFormInput(string formName) {
 	SDL_StartTextInput();
 	while (!quit) {
 		SDL_RenderClear(gRenderer);
-		SDL_RenderCopy(gRenderer, form, NULL, createRect(&rect, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+		SDL_RenderCopy(gRenderer, form, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 375, 200, 66, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 200, 66, NULL);
 		createText(generalFont, { 0 , 0 , 0 }, text1, 183, 246, text1.size() * 20, 40);
@@ -668,7 +694,7 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 	SDL_StartTextInput();
 	while (!quit) {
 		SDL_RenderClear(gRenderer);
-		SDL_RenderCopy(gRenderer, form, NULL, createRect(&rect, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+		SDL_RenderCopy(gRenderer, form, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 375, 200, 66, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 200, 66, NULL);
 		createText(generalFont, { 0 , 0 , 0 }, text1, 183, 246, text1.size() * 20, 40);
@@ -741,7 +767,7 @@ void arrayVisualizing() {
 		cnt++;
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
-		SDL_RenderFillRect(gRenderer, createRect(&rect, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+		SDL_RenderFillRect(gRenderer, &SCREEN);
 		arrayVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], false, 200, 530, 200, 100, NULL);
@@ -829,6 +855,24 @@ void arrayVisualizing() {
 						}
 					}
 				}
+				else if (e.button.x > 800 && e.button.x < 1000 && e.button.y > 530 && e.button.y < 630) {
+					bool checkStep;
+					bool isValid;
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("UpdateForm.png");
+					arrayVisualizer.resetStep();
+					globalCode = {};
+					linesDisplay = -1;
+					if (isValid) {
+						if (checkStep) {
+							arrayVisualizer.stepUpdate = 0;
+							for (int i = 0; i < 100; i++)
+								arrayVisualizer.tempArr[i] = arrayVisualizer.arr[i];
+						}
+						else {
+							arrayVisualizer.update(idx, val);
+						}
+					}
+				}
 			}
 		}
 		SDL_RenderPresent(gRenderer);
@@ -849,7 +893,7 @@ void mainMenu() {
 	while (!quit) {
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
-		SDL_RenderCopy(gRenderer, background, NULL, createRect(&rect, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+		SDL_RenderCopy(gRenderer, background, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 300, 100, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], false, 400, 210, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 300, 320, 200, 100, NULL);
