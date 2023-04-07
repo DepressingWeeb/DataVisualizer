@@ -33,7 +33,30 @@ const int SCREEN_HEIGHT = 640;
 map<string, string> codeExplainMap = {
 	{"ListNode* toDel=head","Create a new Node pointer point to the head of the linked list"},
 	{"head=head->next","Set head pointer to the next Node"},
-	{"delete toDel;","Delete everything in the previous head"}
+	{"delete toDel;","Delete everything in the previous head"},
+	{"ListNode* curr=head->next;","Set curr pointer to the second node"},
+	{"ListNode* prev=head;","Set prev pointer to the first (head) node"},
+	{"while(index-- > 1){","Check exit loop if index <= 1 and decrease the index to delete"},
+	{"    curr=curr->next;","Set curr pointer to the next node"},
+	{"    prev=prev->next;","Set prev pointer to the next node"},
+	{"prev->next=curr->next;","Set the pointer of prev to point to the next of curr pointer"},
+	{"delete curr;","Deallocate the memory used by the deleted node"},
+	{"    head=head->next;","Set head pointer to the next node"},
+	{"ListNode* newNode = new ListNode(value,nullptr);","Create the pointer to the insert node"},
+	{"newNode->next = head->next;","Set the next pointer of the insert node to next of the head pointer"},
+	{"head->next = newNode;","Set the next pointer of head to point to the new node"},
+	{"newNode->next = head","Set the next pointer of the insert node to the first node (head)"},
+	{"head = newNode;","Change the head pointer of linked list to the new node"},
+	{"while (head){","Check if head is a nullptr,if it is then exit the loop"},
+	{"    if( head->val == target )","Check to find whether the value of the pointer is equal to the target"},
+	{"        return ans;","Return the index at which the value was found"},
+	{"    head = head->next;","Increase the pointer to the next node"},
+	{"    ans++;","Increase the answer-index of the node that has the value"},
+	{"return NOT_FOUND;","If the list doesn't contain the value ,return NOT_FOUND constant (oftentimes will be -1)"},
+	{"while (index--){","Check if the index variable (the index to update) is 0 or not to exit the loop, else decrease it"},
+	{"head->val=updateValue;","Set the pointer value to the update value"},
+	{"tail->next = newNode","Set the next pointer of tail to point to the new node"},
+	{"tail = tail->next;","Change the tail pointer to the new node"}
 };
 SDL_Rect SCREEN = { 0,0,SCREEN_WIDTH,SCREEN_HEIGHT };
 
@@ -94,23 +117,24 @@ void createText(TTF_Font* font, SDL_Color color, string text, int x, int y, int 
 	SDL_DestroyTexture(texture);
 }
 
-void highlightCode(TTF_Font* font,SDL_Texture* explain,vector<string> code, int linesColor, int startX, int startY,SDL_Color color) {
+void highlightCode(TTF_Font* font,SDL_Texture* explain,vector<string> code, int linesColor, int startX, int startY,SDL_Color color,bool checkStep) {
 	if (linesColor == -1) return;
 	int mouseX, mouseY;
 	string explanation = codeExplainMap[code[linesColor]];
 	SDL_Rect rect;
+	int letterSizeW = 8;
 	SDL_Rect hightlight = { startX, startY + linesColor * 50, code[linesColor].size() * 16, 40 };
-	SDL_Rect src = { 0,0,explanation.size()*10 + 80,72 };
-	SDL_Rect dst = { 0, SCREEN_HEIGHT-72, explanation.size() * 10+80, 72 };
+	SDL_Rect src = { 0,0,explanation.size()*letterSizeW + 80,50 };
+	SDL_Rect dst = { SCREEN_WIDTH-(explanation.size() * letterSizeW + 80), 0, explanation.size() * letterSizeW+80, 50 };
 	SDL_GetMouseState(&mouseX, &mouseY);
 	SDL_Color oldColor;
 	SDL_GetRenderDrawColor(gRenderer, &oldColor.r, &oldColor.g, &oldColor.b, &oldColor.a);
 	
 	SDL_SetRenderDrawColor(gRenderer,color.r,color.g,color.b,color.a);
-	if (mouseX > startX && mouseX<startX + code[linesColor].size() * 16 && mouseY>startY + linesColor * 50 && mouseY < startY + linesColor * 50 + 40) {
+	if ((mouseX > startX && mouseX<startX + code[linesColor].size() * 16 && mouseY>startY + linesColor * 50 && mouseY < startY + linesColor * 50 + 40)||!checkStep) {
 		SDL_RenderFillRect(gRenderer, &hightlight);
 		SDL_RenderCopy(gRenderer, explain, &src, &dst);
-		createText(font, BLACK, explanation, 52, SCREEN_HEIGHT - 30, explanation.size() * 10, 20);
+		createText(font, BLACK, explanation, dst.x+52, dst.y+22, explanation.size() * letterSizeW, 20);
 
 	}
 	SDL_SetRenderDrawColor(gRenderer, oldColor.r, oldColor.g, oldColor.b,oldColor.a);
@@ -700,6 +724,7 @@ public:
 	}
 	void insertStep(int idx, string val,bool checkStep) { 
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
 		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 100);
 		vector<string> code;
 		if(idx)
@@ -707,15 +732,15 @@ public:
 			"while(index-- > 1){",
 			"    head=head->next;",
 			"}",
-			"ListNode * newNode = new ListNode(value,nullptr); ",
-			"newNode->next = head->next; ",
-			"head->next = newNode; "
+			"ListNode* newNode = new ListNode(value,nullptr);",
+			"newNode->next = head->next;",
+			"head->next = newNode;"
 		};
 		else
 			code = {
-			"ListNode * newNode = new ListNode(value,nullptr); ",
-			"newNode->next = head ",
-			"head = newNode; "
+			"ListNode* newNode = new ListNode(value,nullptr);",
+			"newNode->next = head",
+			"head = newNode;"
 		};
 		int linesColor = -1;
 		int totalSteps = idx?idx*2 + 2:3;
@@ -741,6 +766,7 @@ public:
 			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
 			if (framesCount % 60 == 0&&!checkStep) currStep=min(currStep+1,totalSteps);
 			currHead = getNode(currHeadIndex);
+			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW,checkStep);
 			if(currStep==0){
 				linesColor = -1;
 				currHeadIndex = 0;
@@ -829,6 +855,7 @@ public:
 		resetColor();
 		resetArrow();
 		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
 	}
@@ -869,14 +896,15 @@ public:
 	}
 	void searchStep(string val,bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
-		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 100);
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
+		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 92);
 		vector<string> code = { "while (head){",
 							 "    if( head->val == target )",
 							 "        return ans;",
 							 "    head = head->next;",
 							 "    ans++;",
 							 "}",
-							 " return NOT_FOUND;" };
+							 "return NOT_FOUND;" };
 		int linesColor = -1;
 		int ans = search(val);
 		int totalSteps = ans == -1 ? (listSize) * 4 +2 : ans * 4+3;
@@ -933,6 +961,7 @@ public:
 
 				visualize();
 			}
+			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
@@ -966,6 +995,7 @@ public:
 		}
 		resetColor();
 		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
 	}
@@ -979,10 +1009,9 @@ public:
 	}
 	void deleteStep(int idx, bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
 		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 100);
-		vector<string> code;
-		if (idx)
-			code = {
+		vector<string> code= {
 			"ListNode* curr=head->next;",
 			"ListNode* prev=head;",
 			"while(index-- > 1){",
@@ -990,13 +1019,7 @@ public:
 			"    prev=prev->next;",
 			"}",
 			"prev->next=curr->next;",
-			"delete curr",
-		};
-		else
-			code = {
-			"ListNode* toDel=head",
-			"head=head->next",
-			"delete toDel;"
+			"delete curr;",
 		};
 		int linesColor = -1;
 		int totalSteps = 2+(idx-1)*3+2+1;
@@ -1089,6 +1112,7 @@ public:
 					}
 				}
 			}
+			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW,checkStep);
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
@@ -1128,6 +1152,7 @@ public:
 		resetColor();
 		resetArrow();
 		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
 	}
@@ -1165,6 +1190,7 @@ public:
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
 			else prevPtr = nullptr;
+			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW,checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				currIndex = -1;
@@ -1204,7 +1230,6 @@ public:
 					clone = clone->next;
 				}
 			}
-			highlightCode(generalFont,explain,code, linesColor, 100, 250,YELLOW);
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
@@ -1248,6 +1273,7 @@ public:
 	}
 	void updateStep(int idx,string val, bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
 		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 100);
 		vector<string> code = { "while (index--){",
 							 "    head = head->next;",
@@ -1302,6 +1328,7 @@ public:
 				currHead->setColorNode(GREEN);
 				visualize();
 			}
+			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
@@ -1336,6 +1363,7 @@ public:
 		updateNode->val = val;
 		resetColor();
 		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
 	}
@@ -1417,6 +1445,7 @@ public:
 	}
 	void popStep(bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
 		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 100);
 		vector<string> code = {
 			"ListNode* toDel=head",
@@ -1448,6 +1477,7 @@ public:
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
 			else prevPtr = nullptr;
+			highlightCode(generalFont, explain, code, linesColor, 200, 100, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				currIndex = -1;
@@ -1526,12 +1556,14 @@ public:
 		resetColor();
 		resetArrow();
 		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
 	}
 	void pushStep(string val, bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
-		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 100);
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
+		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 92);
 		int linesColor = -1;
 		int totalSteps = 3;
 		SDL_Rect rect;
@@ -1544,9 +1576,9 @@ public:
 		int framesCount = 1;
 		ListNode* tmpHead = nullptr;
 		vector<string> code = {
-			"ListNode * newNode = new ListNode(value,nullptr); ",
-			"newNode->next = head ",
-			"head = newNode; "
+			"ListNode* newNode = new ListNode(value,nullptr);",
+			"newNode->next = head",
+			"head = newNode;"
 		};
 		ListNode* newNode = new ListNode(val, head->centerX+100, head->centerY , 25);
 		while (!quit) {
@@ -1557,6 +1589,7 @@ public:
 			if (framesCount % 60 == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
 			if (headIndex >= 0)	tmpHead = getNode(headIndex);
 			else tmpHead = nullptr;
+			highlightCode(generalFont, explain, code, linesColor, 200, 200, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				headIndex = -1;
@@ -1629,6 +1662,7 @@ public:
 		resetColor();
 		resetArrow();
 		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
 
@@ -1713,6 +1747,7 @@ public:
 	}
 	void popStep(bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
 		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 100);
 		vector<string> code = {
 			"ListNode* toDel=head",
@@ -1744,6 +1779,7 @@ public:
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
 			else prevPtr = nullptr;
+			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				currIndex = -1;
@@ -1822,11 +1858,13 @@ public:
 		resetColor();
 		resetArrow();
 		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
 	}
 	void pushStep(string val, bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.jpg");
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
 		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 100);
 		int linesColor = -1;
 		int totalSteps = 3;
@@ -1838,7 +1876,7 @@ public:
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		vector<string> code = {
-			"ListNode* newNode = new ListNode(value,nullptr); ",
+			"ListNode* newNode = new ListNode(value,nullptr);",
 			"tail->next = newNode",
 			"tail = tail->next;"
 		};
@@ -1849,6 +1887,7 @@ public:
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (framesCount % 60 == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				resetColor();
@@ -1917,6 +1956,7 @@ public:
 		resetColor();
 		resetArrow();
 		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
 
