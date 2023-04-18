@@ -4710,19 +4710,24 @@ tuple <int, string, bool,bool> indexValueFormInput(string formName) {
 	bool leftMouseDown = false;
 	int activeField = 0;
 	string text1 = "";
+	string text2 = "";
 	SDL_Event e;
 	SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
 	SDL_StartTextInput();
 	while (!quit) {
 		SDL_RenderClear(gRenderer);
 		SDL_RenderCopy(gRenderer, form, NULL, &SCREEN);
-		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 375, 200, 66, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 385, 200, 66, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 200, 66, NULL);
-		createText(generalFont, { 0 , 0 , 0 }, text1, 183, 246, text1.size() * 20, 40);
+		createText(generalFont, { 0 , 0 , 0 }, text1, 170, 184, text1.size() * 20, 40);
+		createText(generalFont, { 0 , 0 , 0 }, text2, 170, 300, text2.size() * 20, 40);
 		if (SDL_GetTicks64() % 1000 >= 500) {
 			switch (activeField) {
 			case 1:
-				SDL_RenderDrawLine(gRenderer, 183 + text1.size() * 20, 246, 183 + text1.size() * 20, 283);
+				SDL_RenderDrawLine(gRenderer, 170 + text1.size() * 20, 184, 170 + text1.size() * 20, 219);
+				break;
+			case 2:
+				SDL_RenderDrawLine(gRenderer, 170 + text2.size() * 20, 300, 170 + text2.size() * 20, 334);
 				break;
 			}
 		}
@@ -4735,18 +4740,21 @@ tuple <int, string, bool,bool> indexValueFormInput(string formName) {
 				break;
 			case SDL_TEXTINPUT:
 				if (activeField == 1) text1 += e.text.text;
+				else if (activeField == 2) text2 += e.text.text;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
-				if (e.button.x > 169 && e.button.x < 794 && e.button.y > 228 && e.button.y < 299) activeField = 1;
+				if (e.button.x > 156 && e.button.x < 763 && e.button.y > 176 && e.button.y < 233) activeField = 1;
+				else if (e.button.x > 156 && e.button.x < 763 && e.button.y > 292 && e.button.y < 342) activeField = 2;
 				else activeField = 0;
-				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 375 && e.button.y < 441) { quit = true; checkStep = true; }
+				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 385 && e.button.y < 451) { quit = true; checkStep = true; }
 				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 500 && e.button.y < 566) {
-					quit = true; 
+					quit = true;
 				}
 			case SDL_KEYDOWN:
 				if (e.key.keysym.sym == SDLK_BACKSPACE) {
 					if (activeField == 1 && text1.size() != 0) text1.pop_back();
+					else if (activeField == 2 && text2.size() != 0) text2.pop_back();
 				}
 			}
 		}
@@ -4757,12 +4765,8 @@ tuple <int, string, bool,bool> indexValueFormInput(string formName) {
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(form);
 	TTF_CloseFont(generalFont);
-	if (text1 != "") {
-		stringstream ss(text1);
-		int idx;
-		string val;
-		ss >> idx >> val;
-		return make_tuple(idx, val, checkStep, true);
+	if (text1 != "" && text2!="") {
+		return make_tuple(stoi(text1), text2, checkStep, true);
 	}
 	else return make_tuple(0, "-1", false, false);
 
