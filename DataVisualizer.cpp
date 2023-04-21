@@ -75,13 +75,88 @@ map<string, string> codeExplainMap = {
 	{"return NOT_FOUND;","If the array doesn't contain the value ,return NOT_FOUND constant (oftentimes will be -1)"},
 	//update array
 	{"arr[indexUpdate] = valueUpdate;","update the input index to be equal to the value the user input"},
-	{"while (listSize--){","Check exit loop if listSize == 0 and decrease the listSize variable"}
+	{"while (listSize--){","Check exit loop if listSize == 0 and decrease the listSize variable"},
+	//Insert empty LL
+	{"head = new ListNode(value,nullptr);","Create the head of the list"},
+	{"tail->next = head;","Set tail next pointer point to head of the list because current list has only one Node to create the typical cycle"},
+	{"tail = head;","Set tail pointer equal to head because list has only one node"},
+	{"DLLNode* newNode = new DLLNode(value,head,head->next);","Create a new DLLNode that has prev pointer point to head pointer and next pointer point to head->next pointer"},
+	{"if (head->next)    head->next->prev = newNode;","Check the next pointer existence. If it is, set its prev pointer point to the newNode "},
+	{"DLLNode* newNode = new DLLNode(value,nullptr,nullptr);","Create a new DLLNode that has both prev and next pointer set to nullptr"},
+	{"head->prev = newNode;","Set the prev pointer of head point to the newNode"},
+	{"    toDel = toDel->next;","Increase pointer to the next Node"},
+	{"if (toDel->prev)	toDel->prev->next = toDel->next;","Check the prev pointer existence. If it is, set its next to the deleteNode->next"},
+	{"if (toDel->next)	toDel->next->prev = toDel->prev;","Check the next pointer existence. If it is, set its prev to the deleteNode->prev"},
+	{"DLLNode* toDel = head;","Set the toDel pointer equal to head pointer"},
+	{"if (head)	head->prev = nullptr;","Check the head pointer existence (the list is empty or not). If it is, set its prev to nullptr"},
+	{"head = new DLLNode(value,nullptr,nullptr);","Initiate a new head that has both prev and next pointer set to nullptr"},
+	{"/* Re-layout the list */","Re-layout the current list to fit the purpose of visualization"}
 };
 SDL_Rect SCREEN = { 0,0,SCREEN_WIDTH,SCREEN_HEIGHT };
 
 SDL_Window* window = SDL_CreateWindow("Data Visualizer", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 SDL_Renderer* gRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+class Theme {
+private:
+	SDL_Color bgColor;
+	SDL_Color bgElemColor;
+	SDL_Color textColor;
+	SDL_Color elemColor;
+	SDL_Color arrowColor;
+	int textSize;
+	Theme(SDL_Color bgColor, SDL_Color bgElemColor, SDL_Color textColor,SDL_Color elemColor,SDL_Color arrowColor, int textSize) {
+		this->bgColor = bgColor;
+		this->bgElemColor = bgElemColor;
+		this->textColor = textColor;
+		this->elemColor = elemColor;
+		this->arrowColor = arrowColor;
+		this->textSize = textSize;
+	}
+public:
+	SDL_Color getBgColor() {
+		return bgColor;
+	}
+	SDL_Color getBgElemColor() {
+		return bgElemColor;
+	}
+	SDL_Color getTextColor() {
+		return textColor;
+	}
+	SDL_Color getElemColor() {
+		return elemColor;
+	}
+	SDL_Color getArrowColor() {
+		return arrowColor;
+	}
+	int getTextSize() {
+		return textSize;
+	}
+	void setBgColor(SDL_Color color) {
+		bgColor = color;
+	}
+	void setbgElemColor(SDL_Color color) {
+		bgElemColor = color;
+	}
+	void setTextColor(SDL_Color color) {
+		textColor = color;
+	}
+	void setElemColor(SDL_Color color) {
+		elemColor = color;
+	}
+	void setArrowColor(SDL_Color color) {
+		arrowColor = color;
+	}
+	void setTextSize(int size) {
+		textSize = size;
+	}
+	static Theme getInstance(SDL_Color bgColor, SDL_Color bgElemColor, SDL_Color textColor,SDL_Color elemColor,SDL_Color arrowColor, int textSize) {
+		static Theme theme(bgColor, bgElemColor, textColor,elemColor,arrowColor, textSize);
+		return theme;
+	}
 
+};
+//Theme(SDL_Color bgColor, SDL_Color bgElemColor, SDL_Color textColor,SDL_Color elemColor,SDL_Color arrowColor, int textSize)
+Theme theme = Theme::getInstance(WHITE, WHITE, BLACK, BLACK,BLACK,30);
 void init() {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	IMG_Init(IMG_INIT_PNG);
@@ -95,7 +170,6 @@ SDL_Rect* createRect(SDL_Rect* rect, int x, int y, int w, int h) {
 	rect->h = h;
 	return rect;
 }
-
 SDL_Texture* loadImgTexture(string path) {
 	SDL_Texture* newTexture = NULL;
 	newTexture = IMG_LoadTexture(gRenderer, path.c_str());
@@ -128,7 +202,7 @@ void createButton(SDL_Texture* buttonSpriteSheet ,SDL_Rect* button, SDL_Rect* bu
 }
 
 void createText(TTF_Font* font, SDL_Color color, string text, int x, int y, int w, int h) {
-	SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), color);
+	SDL_Surface* textSurface = TTF_RenderText_Blended(font, text.c_str(), color);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(gRenderer, textSurface);
 	SDL_FreeSurface(textSurface);
 	SDL_Rect rect;
@@ -161,6 +235,127 @@ void highlightCode(TTF_Font* font,SDL_Texture* explain,vector<string> code, int 
 bool isNumber(string s) {
 	return !s.empty() && s.find_first_not_of("0123456789") == std::string::npos;
 }
+bool isExist(const string& name) {
+	ifstream f(name.c_str());
+	return f.good();
+}
+string ltrim(const string& s)
+{
+	size_t start = s.find_first_not_of(" \n\r\t\f\v");
+	return (start == std::string::npos) ? "" : s.substr(start);
+}
+
+string rtrim(const string& s)
+{
+	size_t end = s.find_last_not_of(" \n\r\t\f\v");
+	return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+}
+
+string trim(const string& s) {
+	return rtrim(ltrim(s));
+}
+void SDL_RenderDrawCircle(SDL_Renderer* renderer, int32_t x, int32_t y, int32_t radius, SDL_Color color)
+{
+	int offsetx, offsety, d;
+	int status;
+
+	offsetx = 0;
+	offsety = radius;
+	d = radius - 1;
+	status = 0;
+	SDL_Color old;
+	SDL_GetRenderDrawColor(renderer, &old.r, &old.g, &old.b, &old.a);
+	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+
+	while (offsety >= offsetx) {
+		status += SDL_RenderDrawPoint(renderer, x + offsetx, y + offsety);
+		status += SDL_RenderDrawPoint(renderer, x + offsety, y + offsetx);
+		status += SDL_RenderDrawPoint(renderer, x - offsetx, y + offsety);
+		status += SDL_RenderDrawPoint(renderer, x - offsety, y + offsetx);
+		status += SDL_RenderDrawPoint(renderer, x + offsetx, y - offsety);
+		status += SDL_RenderDrawPoint(renderer, x + offsety, y - offsetx);
+		status += SDL_RenderDrawPoint(renderer, x - offsetx, y - offsety);
+		status += SDL_RenderDrawPoint(renderer, x - offsety, y - offsetx);
+
+		if (status < 0) {
+			status = -1;
+			break;
+		}
+
+		if (d >= 2 * offsetx) {
+			d -= 2 * offsetx + 1;
+			offsetx += 1;
+		}
+		else if (d < 2 * (radius - offsety)) {
+			d += 2 * offsety - 1;
+			offsety -= 1;
+		}
+		else {
+			d += 2 * (offsety - offsetx - 1);
+			offsety -= 1;
+			offsetx += 1;
+		}
+	}
+	SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
+}
+void SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius,SDL_Color color)
+{
+	int offsetx, offsety, d;
+	int status;
+
+	offsetx = 0;
+	offsety = radius;
+	d = radius - 1;
+	status = 0;
+	SDL_Color old;
+	SDL_GetRenderDrawColor(renderer, &old.r, &old.g, &old.b, &old.a);
+	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+
+	while (offsety >= offsetx) {
+
+		status += SDL_RenderDrawLine(renderer, x - offsety, y + offsetx,
+			x + offsety, y + offsetx);
+		status += SDL_RenderDrawLine(renderer, x - offsetx, y + offsety,
+			x + offsetx, y + offsety);
+		status += SDL_RenderDrawLine(renderer, x - offsetx, y - offsety,
+			x + offsetx, y - offsety);
+		status += SDL_RenderDrawLine(renderer, x - offsety, y - offsetx,
+			x + offsety, y - offsetx);
+
+		if (status < 0) {
+			status = -1;
+			break;
+		}
+
+		if (d >= 2 * offsetx) {
+			d -= 2 * offsetx + 1;
+			offsetx += 1;
+		}
+		else if (d < 2 * (radius - offsety)) {
+			d += 2 * offsety - 1;
+			offsety -= 1;
+		}
+		else {
+			d += 2 * (offsety - offsetx - 1);
+			offsety -= 1;
+			offsetx += 1;
+		}
+	}
+	SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
+}
+void DrawArrow(SDL_Renderer* renderer, int startX, int endX, int startY, int endY, double trirad, SDL_Color color) {
+	const double PI = 3.14159265358979323846;
+	double rad = PI / 180.0;
+	SDL_Color old;
+	SDL_GetRenderDrawColor(renderer, &old.r, &old.g, &old.b, &old.a);
+	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+	SDL_RenderDrawLine(renderer, startX, startY, endX, endY);
+	double rotation = atan2(startY - endY, endX - startX) + PI / 2.0;
+	SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation), endY + trirad * cos(rotation), endX + trirad * sin(rotation - 120.0 * rad), endY + trirad * cos(rotation - 120.0 * rad));
+	SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation - 120.0 * rad), endY + trirad * cos(rotation - 120.0 * rad), endX + trirad * sin(rotation + 120.0 * rad), endY + trirad * cos(rotation + 120.0 * rad));
+	SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation + 120.0 * rad), endY + trirad * cos(rotation + 120.0 * rad), endX + trirad * sin(rotation), endY + trirad * cos(rotation));
+	SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
+}
 class ArrayElement {
 public:
 	int x;
@@ -169,17 +364,20 @@ public:
 	int h;
 	string index;
 	SDL_Color color;
+	SDL_Color bgColor;
+	SDL_Color textColor;
 	string val;
 	SDL_Rect rect;
 	TTF_Font* numberFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 200);
-	TTF_Font* letterFont = TTF_OpenFont("resources/Font/ClementFive.ttf", 500);
 	ArrayElement() { this->val = "N"; }
-	ArrayElement(int x, int y,int w,int h, SDL_Color color,string val,string index) {
+	ArrayElement(int x, int y,int w,int h, SDL_Color color,SDL_Color bgColor,SDL_Color textColor,string val,string index) {
 		this->x = x;
 		this->y = y;
 		this->w = w;
 		this->h = h;
 		this->color = color;
+		this->bgColor = bgColor;
+		this->textColor = textColor;
 		this->val = val;
 		this->index = index;
 	}
@@ -190,12 +388,19 @@ public:
 		SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
 		SDL_SetRenderDrawColor(gRenderer, color.r, color.g, color.b, color.a);
 		SDL_RenderDrawRect(gRenderer, createRect(&rect, x, y, w, h));
-		createText(numberFont, color, val.size()==1 && val!="0" ? "0" + val : val, x + 10, y + 10, 30, 30);
-		createText(numberFont, color, index, x + 17, y + 60, 15, 20);
+		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
+		SDL_RenderFillRect(gRenderer, createRect(&rect, x+1, y+1, w-2, h-2));
+		createText(numberFont, textColor, val.size()==1 && val!="0" ? "0" + val : val, x + (50-theme.getTextSize())/2, y + (50 - theme.getTextSize())/2, theme.getTextSize(), theme.getTextSize());
+		createText(numberFont, BLACK, index, x + 17, y + 60, 15, 20);
 		SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 	}
 	void changeColor(SDL_Color color) {
 		this->color = color;
+		this->textColor = color;
+	}
+	void changeColor(SDL_Color elemColor, SDL_Color textColor) {
+		this->color = elemColor;
+		this->textColor = textColor;
 	}
 	void changeCoordinate(int x, int y, int w, int h) {
 		this->x = x;
@@ -207,6 +412,8 @@ public:
 };
 
 class ArrayVisualizer {
+private:
+	SDL_Color bgColor;
 public:
 	int n;
 	ArrayElement arr[100];
@@ -233,6 +440,7 @@ public:
 		delay = -1;
 		maxStep = 1000;
 		speed = 0;
+		bgColor = theme.getBgColor();
 		for (int i = 0; i < 100; i++) arr[i] = ArrayElement();
 		SDL_Rect rect;
 		for (int i = 0; i < 4; i++) {
@@ -247,7 +455,7 @@ public:
 	void resetStep() {
 		for (int i = 0; i < 100; i++) {
 			if (arr[i].val == "N") break;
-			arr[i].changeColor(BLACK);
+			arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
 		}
 		code = {};
 		linesDisplay = -1;
@@ -303,7 +511,7 @@ public:
 		SDL_Event e;
 		while (t--) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			visualize();
 			createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], leftMouseDown, 900, 400, 50, 50, nullptr);
@@ -391,7 +599,7 @@ public:
 			arr[i] = ArrayElement();
 		}
 		for (int i = 0; i < n; i++) {
-			arr[i] = ArrayElement(100+i*50, 100, 50, 50, { 0,0,0 }, strArr[i],to_string(i));
+			arr[i] = ArrayElement(100+i*50, 100, 50, 50,theme.getElemColor(),theme.getBgElemColor(),theme.getTextColor(),strArr[i],to_string(i));
 		}
 
 	}
@@ -407,14 +615,14 @@ public:
 			"arr[indexInsert] = valueInsert;" 
 		};
 		n++;
-		arr[n - 1] = ArrayElement(100 + (n - 1) * 50, 100, 50, 50, YELLOW, "0",to_string(n-1));
+		arr[n - 1] = ArrayElement(100 + (n - 1) * 50, 100, 50, 50, YELLOW, theme.getBgElemColor(), YELLOW , "0",to_string(n-1));
 		currStep++;
 		if (currStep == step) { linesDisplay = 0; code = codeInsert; return; }
 
 		for (int i = n - 1; i > idx; i--) {
 			currStep++;
 			if (currStep == step) { linesDisplay = 1; code = codeInsert; return; }
-			arr[i + 1].changeColor(BLACK);
+			arr[i + 1].changeColor(theme.getElemColor(), theme.getTextColor());
 			arr[i].val = arr[i - 1].val;
 			arr[i].changeColor(RED);
 			arr[i - 1].changeColor(BLUE);
@@ -423,7 +631,7 @@ public:
 		}
 		currStep++;
 		if (currStep == step) { linesDisplay = 1; code = codeInsert; return; }
-		arr[idx + 1].changeColor(BLACK);
+		arr[idx + 1].changeColor(theme.getElemColor(), theme.getTextColor());
 		arr[idx].val = val;
 		currStep++;
 		linesDisplay = 4; code = codeInsert; maxStep = currStep; return;
@@ -439,26 +647,26 @@ public:
 		};
 		
 		n++;
-		arr[n-1] = ArrayElement(100 + (n-1) * 50, 100, 50, 50, { 255,255,0 }, "0",to_string(n-1));
+		arr[n-1] = ArrayElement(100 + (n-1) * 50, 100, 50, 50, YELLOW, theme.getBgElemColor(), YELLOW, "0",to_string(n-1));
 		updateFrame(codeInsert, 0);
 		
 		for (int i = n-1; i > idx; i--) {
 			updateFrame(codeInsert, 1);
-			arr[i + 1].changeColor(BLACK);
+			arr[i + 1].changeColor(theme.getElemColor(),theme.getTextColor());
 			arr[i].val = arr[i - 1].val;
 			arr[i].changeColor(RED);
 			arr[i-1].changeColor(BLUE);
 			updateFrame(codeInsert,2);
 		}
 		updateFrame(codeInsert, 1);
-		arr[idx + 1].changeColor({ 0,0,0,255 });
+		arr[idx + 1].changeColor(theme.getElemColor(), theme.getTextColor());;
 		arr[idx].val = val;
 		updateFrame(codeInsert,4);
-		arr[idx].changeColor({ 0,0,0,255 });
+		arr[idx].changeColor(theme.getElemColor(), theme.getTextColor());;
 		updateFrame(codeInsert, 4);
 	}
 	void insertNoVisual(int idx, string val) {
-		arr[n - 1] = ArrayElement(100 + (n - 1) * 50, 100, 50, 50, { 255,255,0 }, "0", to_string(n - 1));
+		arr[n - 1] = ArrayElement(100 + (n - 1) * 50, 100, 50, 50, YELLOW, theme.getBgElemColor(),YELLOW, "0", to_string(n - 1));
 		for (int i = n - 1; i > idx; i--) {
 			arr[i].val = arr[i - 1].val;
 		}
@@ -478,7 +686,7 @@ public:
 		for (int i = idx; i < n - 1; i++) {
 			currStep++;
 			if (currStep == step) { linesDisplay = 0; code = codeDelete; return; }
-			if (i != idx) arr[i - 1].changeColor(BLACK);
+			if (i != idx) arr[i - 1].changeColor(theme.getElemColor(), theme.getTextColor());
 			arr[i].changeColor(GREEN);
 			arr[i + 1].changeColor(RED);
 			arr[i].val = arr[i + 1].val;
@@ -490,7 +698,7 @@ public:
 		arr[n - 1] = ArrayElement();
 
 		n--;
-		arr[n - 1].changeColor({ 0,0,0 });
+		arr[n - 1].changeColor(theme.getElemColor(), theme.getTextColor());
 		currStep++;
 		linesDisplay = 3; code = codeDelete; maxStep = currStep; return;
 
@@ -499,7 +707,7 @@ public:
 		vector<string> codeDelete = { "for(int i = indexDelete; i < n-1; i++){", "    arr[i] = arr[i+1];","}","n--;" };
 		for (int i = idx; i < n-1; i++) {
 			updateFrame(codeDelete,0);
-			if (i != idx) arr[i - 1].changeColor(BLACK);
+			if (i != idx) arr[i - 1].changeColor(theme.getElemColor(), theme.getTextColor());
 			arr[i].changeColor(GREEN);
 			arr[i + 1].changeColor(RED);
 			arr[i].val = arr[i + 1].val;
@@ -510,7 +718,7 @@ public:
 		
 		n--;
 		updateFrame(codeDelete, 3);
-		arr[n - 1].changeColor({ 0,0,0 });
+		arr[n - 1].changeColor(theme.getElemColor(), theme.getTextColor());
 
 
 	}
@@ -522,7 +730,7 @@ public:
 		arr[n - 1] = ArrayElement();
 
 		n--;
-		arr[n - 1].changeColor({ 0,0,0 });
+		arr[n - 1].changeColor(theme.getElemColor(), theme.getTextColor());
 	}
 	void searchStep(string val, int step,int n) {
 		for (int i = 0; i < 100; i++) arr[i] = tempArr[i];
@@ -546,7 +754,7 @@ public:
 				arr[i].changeColor(GREEN);
 				currStep++;
 				if (currStep == step) { linesDisplay = 2; code = codeSearch; return; }
-				arr[i].changeColor(BLACK);
+				arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
 				currStep++;
 				if (currStep == step) { linesDisplay = 3; code = codeSearch; maxStep = currStep; return; }
 				return;
@@ -554,7 +762,7 @@ public:
 			else arr[i].changeColor(RED);
 			currStep++;
 			if (currStep == step) { linesDisplay = 4; code = codeSearch; return; }
-			arr[i].changeColor(BLACK);
+			arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
 		}
 		currStep++;
 		if (currStep == step) {
@@ -574,13 +782,13 @@ public:
 				updateFrame(codeSearch, 1);
 				arr[i].changeColor(GREEN);
 				updateFrame(codeSearch, 2);
-				arr[i].changeColor(BLACK);
+				arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
 				updateFrame(codeSearch, 3);
 				return;
 			}
 			else arr[i].changeColor(RED);
 			updateFrame(codeSearch, 4);
-			arr[i].changeColor(BLACK);
+			arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
 		}
 		updateFrame(codeSearch, 0);
 		updateFrame(codeSearch, 6);
@@ -595,7 +803,7 @@ public:
 		arr[idx].changeColor(GREEN);
 		currStep++;
 		if (currStep == step) { linesDisplay = 0; code = codeUpdate; return; }
-		arr[idx].changeColor(BLACK);
+		arr[idx].changeColor(theme.getElemColor(), theme.getTextColor());
 		code = codeUpdate;
 		linesDisplay = -1;
 		maxStep = 2;
@@ -605,7 +813,7 @@ public:
 		arr[idx].val = val;
 		arr[idx].changeColor(GREEN);
 		updateFrame(codeUpdate, 0);
-		arr[idx].changeColor(BLACK);
+		arr[idx].changeColor(theme.getElemColor(), theme.getTextColor());
 	}
 };
 
@@ -620,8 +828,11 @@ public:
 	int arrowSY;
 	int arrowDX;
 	int arrowDY;
+	int textSize;
 	SDL_Color colorNode;
+	SDL_Color colorBg;
 	SDL_Color colorArrow;
+	SDL_Color colorText;
 	TTF_Font* numberFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
 
 	ListNode() {
@@ -630,8 +841,11 @@ public:
 		this->centerX = 0;
 		this->centerY = 0;
 		this->radius = 0;
-		this->colorNode = BLACK;
-		this->colorArrow = BLACK;
+		this->textSize = theme.getTextSize();
+		this->colorNode = theme.getElemColor();
+		this->colorArrow = theme.getArrowColor();
+		this->colorBg = theme.getBgElemColor();
+		this->colorText = theme.getTextColor();
 		this->arrowSX = centerX + radius;
 		this->arrowSY = centerY;
 		this->arrowDX = centerX + radius + 30;
@@ -644,8 +858,11 @@ public:
 		this->centerX = centerX;
 		this->centerY = centerY;
 		this->radius = radius;
-		this->colorNode = BLACK;
-		this->colorArrow = BLACK;
+		this->textSize = theme.getTextSize();
+		this->colorNode = theme.getElemColor();
+		this->colorBg = theme.getBgElemColor();
+		this->colorArrow = theme.getArrowColor();
+		this->colorText = theme.getTextColor();
 		this->arrowSX = centerX + radius;
 		this->arrowSY = centerY;
 		this->arrowDX = centerX + radius + 30;
@@ -657,76 +874,30 @@ public:
 		this->centerX = centerX;
 		this->centerY = centerY;
 		this->radius = radius;
-		this->colorNode = BLACK;
-		this->colorArrow = BLACK;
+		this->textSize = theme.getTextSize();
+		this->colorNode = theme.getElemColor();
+		this->colorBg = theme.getBgElemColor();
+		this->colorArrow = theme.getArrowColor();
+		this->colorText = theme.getTextColor();
 		this->arrowSX = centerX + radius;
 		this->arrowSY = centerY;
 		this->arrowDX = centerX + radius + 30;
 		this->arrowDY = centerY;
 	}
-	void DrawCircle(SDL_Renderer* renderer, int32_t centreX, int32_t centreY, int32_t radius,SDL_Color color)
-	{
-		const int32_t diameter = (radius * 2);
-
-		int32_t x = (radius - 1);
-		int32_t y = 0;
-		int32_t tx = 1;
-		int32_t ty = 1;
-		int32_t error = (tx - diameter);
-
-		SDL_Color old;
-		SDL_GetRenderDrawColor(renderer, &old.r, &old.g, &old.b,&old.a);
-		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-		while (x >= y)
-		{
-			SDL_RenderDrawPoint(renderer, centreX + x, centreY - y);
-			SDL_RenderDrawPoint(renderer, centreX + x, centreY + y);
-			SDL_RenderDrawPoint(renderer, centreX - x, centreY - y);
-			SDL_RenderDrawPoint(renderer, centreX - x, centreY + y);
-			SDL_RenderDrawPoint(renderer, centreX + y, centreY - x);
-			SDL_RenderDrawPoint(renderer, centreX + y, centreY + x);
-			SDL_RenderDrawPoint(renderer, centreX - y, centreY - x);
-			SDL_RenderDrawPoint(renderer, centreX - y, centreY + x);
-
-			if (error <= 0)
-			{
-				++y;
-				error += ty;
-				ty += 2;
-			}
-
-			if (error > 0)
-			{
-				--x;
-				tx += 2;
-				error += (tx - diameter);
-			}
-		}
-		SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
-	}
-	void DrawArrow(SDL_Renderer* renderer, int startX, int endX, int startY, int endY, double trirad, SDL_Color color) {
-		const double PI = 3.14159265358979323846;
-		double rad = PI / 180.0;
-		SDL_Color old;
-		SDL_GetRenderDrawColor(renderer, &old.r, &old.g, &old.b, &old.a);
-		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-		SDL_RenderDrawLine(renderer, startX, startY, endX, endY);
-		double rotation = atan2(startY - endY, endX - startX) + PI / 2.0;
-		SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation), endY + trirad * cos(rotation), endX + trirad * sin(rotation - 120.0 * rad), endY + trirad * cos(rotation - 120.0 * rad));
-		SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation - 120.0 * rad), endY + trirad * cos(rotation - 120.0 * rad), endX + trirad * sin(rotation + 120.0 * rad), endY + trirad * cos(rotation + 120.0 * rad));
-		SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation + 120.0 * rad), endY + trirad * cos(rotation + 120.0 * rad), endX + trirad * sin(rotation), endY + trirad * cos(rotation));
-		SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
-	}
 
 	void displayNode() {
-		DrawCircle(gRenderer, centerX, centerY, radius,colorNode);
-		createText(numberFont, colorNode, val.size() == 1 && val != "0" ? "0" + val : val, centerX - 15, centerY - 15, 30, 30);
+		SDL_RenderDrawCircle(gRenderer, centerX, centerY, radius,colorNode);
+		SDL_RenderFillCircle(gRenderer, centerX, centerY, radius - 1, colorBg);
+		createText(numberFont, colorText, val.size() == 1 && val != "0" ? "0" + val : val, centerX - textSize/2, centerY - textSize/2, textSize, textSize);
 		if (next) {
 			DrawArrow(gRenderer, arrowSX, arrowDX, arrowSY, arrowDY,8,colorArrow);
 		}
 	}
 	void setColorNode(SDL_Color newColor) {
 		colorNode = newColor;
+	}
+	void setColorText(SDL_Color newColor) {
+		colorText = newColor;
 	}
 	void setColorArrow(SDL_Color newColor) {
 		colorArrow = newColor;
@@ -758,8 +929,11 @@ public:
 	int arrowSYPrev;
 	int arrowDXPrev;
 	int arrowDYPrev;
+	int textSize;
 	SDL_Color colorNode;
+	SDL_Color colorBg;
 	SDL_Color colorArrow;
+	SDL_Color colorText;
 	TTF_Font* numberFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
 
 	DoublyListNode() {
@@ -769,8 +943,11 @@ public:
 		this->centerX = 0;
 		this->centerY = 0;
 		this->radius = 0;
-		this->colorNode = BLACK;
-		this->colorArrow = BLACK;
+		this->textSize = theme.getTextSize();
+		this->colorNode = theme.getElemColor();
+		this->colorBg = theme.getBgElemColor();
+		this->colorArrow = theme.getArrowColor();
+		this->colorText = theme.getTextColor();
 		setArrowNextPos(centerX + radius - 3, centerY - 10, centerX + radius + 30, centerY - 10);
 		setArrowPrevPos(centerX - radius + 3, centerY + 10, centerX - radius - 30, centerY + 10);
 	}
@@ -782,8 +959,11 @@ public:
 		this->centerX = centerX;
 		this->centerY = centerY;
 		this->radius = radius;
-		this->colorNode = BLACK;
-		this->colorArrow = BLACK;
+		this->textSize = theme.getTextSize();
+		this->colorNode = theme.getElemColor();
+		this->colorBg = theme.getBgElemColor();
+		this->colorArrow = theme.getArrowColor();
+		this->colorText = theme.getTextColor();
 		setArrowNextPos(centerX + radius - 3, centerY - 10, centerX + radius + 30, centerY - 10);
 		setArrowPrevPos(centerX - radius + 3, centerY + 10, centerX - radius - 30, centerY + 10);
 	}
@@ -794,67 +974,18 @@ public:
 		this->centerX = centerX;
 		this->centerY = centerY;
 		this->radius = radius;
-		this->colorNode = BLACK;
-		this->colorArrow = BLACK;
+		this->textSize = theme.getTextSize();
+		this->colorNode = theme.getElemColor();
+		this->colorBg = theme.getBgElemColor();
+		this->colorArrow = theme.getArrowColor();
+		this->colorText = theme.getTextColor();
 		setArrowNextPos(centerX + radius - 3, centerY - 10, centerX + radius + 30, centerY - 10);
 		setArrowPrevPos(centerX - radius + 3, centerY + 10, centerX - radius - 30, centerY + 10);
 	}
-	void DrawCircle(SDL_Renderer* renderer, int32_t centreX, int32_t centreY, int32_t radius, SDL_Color color)
-	{
-		const int32_t diameter = (radius * 2);
-
-		int32_t x = (radius - 1);
-		int32_t y = 0;
-		int32_t tx = 1;
-		int32_t ty = 1;
-		int32_t error = (tx - diameter);
-
-		SDL_Color old;
-		SDL_GetRenderDrawColor(renderer, &old.r, &old.g, &old.b, &old.a);
-		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-		while (x >= y)
-		{
-			SDL_RenderDrawPoint(renderer, centreX + x, centreY - y);
-			SDL_RenderDrawPoint(renderer, centreX + x, centreY + y);
-			SDL_RenderDrawPoint(renderer, centreX - x, centreY - y);
-			SDL_RenderDrawPoint(renderer, centreX - x, centreY + y);
-			SDL_RenderDrawPoint(renderer, centreX + y, centreY - x);
-			SDL_RenderDrawPoint(renderer, centreX + y, centreY + x);
-			SDL_RenderDrawPoint(renderer, centreX - y, centreY - x);
-			SDL_RenderDrawPoint(renderer, centreX - y, centreY + x);
-
-			if (error <= 0)
-			{
-				++y;
-				error += ty;
-				ty += 2;
-			}
-
-			if (error > 0)
-			{
-				--x;
-				tx += 2;
-				error += (tx - diameter);
-			}
-		}
-		SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
-	}
-	void DrawArrow(SDL_Renderer* renderer, int startX, int endX, int startY, int endY, double trirad, SDL_Color color) {
-		const double PI = 3.14159265358979323846;
-		double rad = PI / 180.0;
-		SDL_Color old;
-		SDL_GetRenderDrawColor(renderer, &old.r, &old.g, &old.b, &old.a);
-		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-		SDL_RenderDrawLine(renderer, startX, startY, endX, endY);
-		double rotation = atan2(startY - endY, endX - startX) + PI / 2.0;
-		SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation), endY + trirad * cos(rotation), endX + trirad * sin(rotation - 120.0 * rad), endY + trirad * cos(rotation - 120.0 * rad));
-		SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation - 120.0 * rad), endY + trirad * cos(rotation - 120.0 * rad), endX + trirad * sin(rotation + 120.0 * rad), endY + trirad * cos(rotation + 120.0 * rad));
-		SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation + 120.0 * rad), endY + trirad * cos(rotation + 120.0 * rad), endX + trirad * sin(rotation), endY + trirad * cos(rotation));
-		SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
-	}
 
 	void displayNode() {
-		DrawCircle(gRenderer, centerX, centerY, radius, colorNode);
+		SDL_RenderDrawCircle(gRenderer, centerX, centerY, radius, colorNode);
+		SDL_RenderFillCircle(gRenderer, centerX, centerY, radius - 1,colorBg);
 		createText(numberFont, colorNode, val.size() == 1 && val != "0" ? "0" + val : val, centerX - 15, centerY - 15, 30, 30);
 		if (next) {
 			DrawArrow(gRenderer, arrowSX, arrowDX, arrowSY, arrowDY, 8, colorArrow);
@@ -868,6 +999,9 @@ public:
 	}
 	void setColorArrow(SDL_Color newColor) {
 		colorArrow = newColor;
+	}
+	void setColorText(SDL_Color newColor) {
+		colorText = newColor;
 	}
 	void setArrowNextPos(int x1, int y1, int x2, int y2) {
 		arrowSX = x1;
@@ -923,12 +1057,15 @@ public:
 	}
 };
 class LinkedListVisualizer {
+private:
+	SDL_Color bgColor;
 public:
 	ListNode* head;
 	int listSize;
 	LinkedListVisualizer() {
 		head = nullptr;
 		listSize = 0;
+		bgColor = theme.getBgColor();
 	}
 	void freeMem() {
 		ListNode* current = head;
@@ -947,9 +1084,10 @@ public:
 			clone = clone->next;
 		}
 	}
-	void initialize( vector<string> list) {
+	void initialize(vector<string> list) {
 		freeMem();
 		this->listSize = list.size();
+		if (list.size() == 0) return;
 		head = new ListNode(list[0], 100, 100, 25);
 		auto clone = head;
 		for (int i = 1; i < list.size(); i++) {
@@ -982,8 +1120,9 @@ public:
 	void resetColor() {
 		ListNode* clone = head;
 		while (clone) {
-			clone->setColorNode(BLACK);
-			clone->setColorArrow(BLACK);
+			clone->setColorNode(theme.getElemColor());
+			clone->setColorArrow(theme.getArrowColor());
+			clone->setColorText(theme.getTextColor());
 			clone = clone->next;
 		}
 	}
@@ -1039,7 +1178,7 @@ public:
 		ListNode* currHead = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50,NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -1208,7 +1347,7 @@ public:
 		ListNode* currHead = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -1338,7 +1477,7 @@ public:
 		ListNode* prevPtr = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if(!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false,900, 400, 50, 50, nullptr);
@@ -1491,7 +1630,7 @@ public:
 		ListNode* prevPtr = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -1616,7 +1755,7 @@ public:
 		string beforeUpdate = updateNode->val;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -1717,7 +1856,7 @@ public:
 		ListNode* newNode = new ListNode(val, 100, 100, 25);
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -1786,11 +1925,13 @@ public:
 class CircularLinkedListVisualizer :public LinkedListVisualizer {
 private:
 	ListNode* tail;
+	SDL_Color bgColor;
 public:
 	CircularLinkedListVisualizer() {
 		head = nullptr;
 		tail = nullptr;
 		listSize = 0;
+		bgColor = theme.getBgColor();
 	}
 	void visualize() {
 		ListNode* clone = head;
@@ -1802,17 +1943,19 @@ public:
 		if (tail && head) {
 			SDL_Color old;
 			SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-			SDL_SetRenderDrawColor(gRenderer,0,0,0,255);
+			SDL_Color arrow = theme.getArrowColor();
+			SDL_SetRenderDrawColor(gRenderer,arrow.r,arrow.g,arrow.b,255);
 			SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 50);
 			SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, head->centerX - 75, head->centerY + 50);
 			SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 50, head->centerX - 75, head->centerY);
-			tail->DrawArrow(gRenderer, head->centerX - 75, head->centerX - 35, head->centerY, head->centerY, 8, BLACK);
+			DrawArrow(gRenderer, head->centerX - 75, head->centerX - 35, head->centerY, head->centerY, 8, theme.getArrowColor());
 			SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 		}
 	}
 	void initialize(vector<string> list) {
 		freeMem();
 		this->listSize = list.size();
+		if (list.size() == 0) return;
 		head = new ListNode(list[0], 100, 100, 25);
 		ListNode* clone = head;
 		for (int i = 1; i < list.size(); i++) {
@@ -1857,7 +2000,7 @@ public:
 		ListNode* currHead = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -1988,7 +2131,7 @@ public:
 		ListNode* newNode = new ListNode(val, head->centerX , head->centerY+100, 25);
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -2037,11 +2180,12 @@ public:
 				if (tail) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+					SDL_Color arrow = theme.getArrowColor();
+					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
 					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
 					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
-					tail->DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, BLACK);
+					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, theme.getArrowColor());
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				newNode->displayNode();
@@ -2061,11 +2205,12 @@ public:
 				if (tail) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+					SDL_Color arrow = theme.getArrowColor();
+					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
 					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
 					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
-					tail->DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, BLACK);
+					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, theme.getArrowColor());
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				newNode->displayNode();
@@ -2139,12 +2284,12 @@ public:
 			"ListNode* newNode = new ListNode(value,nullptr);",
 			"newNode->next = head;",
 			"tail->next = newNode;",
-			"tail = newNode;"
+			"tail = tail->next"
 		};
 		ListNode* newNode = new ListNode(val, head->centerX, head->centerY + 100, 25);
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -2191,11 +2336,12 @@ public:
 				if (tail) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+					SDL_Color arrow = theme.getArrowColor();
+					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
 					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
 					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
-					tail->DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, BLACK);
+					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, theme.getArrowColor());
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				newNode->displayNode();
@@ -2214,11 +2360,12 @@ public:
 				if (tail) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+					SDL_Color arrow = theme.getArrowColor();
+					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
 					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
 					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
-					tail->DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, BLACK);
+					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, theme.getArrowColor());
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				newNode->displayNode();
@@ -2307,7 +2454,7 @@ public:
 		ListNode* prevPtr = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -2370,7 +2517,8 @@ public:
 						prev->setArrowPos(head->centerX - 75, head->centerY, head->centerX - 35, head->centerY);
 						SDL_Color old;
 						SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-						SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+						SDL_Color arrow = theme.getArrowColor();
+						SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 						SDL_RenderDrawLine(gRenderer, prev->centerX, prev->centerY + 25, prev->centerX, prev->centerY + 50);
 						SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 						currPtr = toDelete;
@@ -2394,11 +2542,12 @@ public:
 					if (tail) {
 						SDL_Color old;
 						SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-						SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+						SDL_Color arrow = theme.getArrowColor();
+						SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 50);
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, head->centerX - 75, head->centerY + 50);
 						SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 50, head->centerX - 75, head->centerY);
-						tail->DrawArrow(gRenderer, head->centerX - 75, head->centerX - 35, head->centerY, head->centerY, 8, BLACK);
+						DrawArrow(gRenderer, head->centerX - 75, head->centerX - 35, head->centerY, head->centerY, 8, theme.getArrowColor());
 						SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 					}
 				}
@@ -2481,7 +2630,7 @@ public:
 		ListNode* currHead = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -2571,7 +2720,7 @@ public:
 		vector<string> code = {
 			"ListNode* toDel = head;",
 			"head = head->next;",
-			"tail->next = head",
+			"tail->next = head;",
 			"delete toDel;"
 		};
 		int linesColor = -1;
@@ -2598,7 +2747,7 @@ public:
 		ListNode* prevPtr = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -2651,7 +2800,8 @@ public:
 				if (tail && aft) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+					SDL_Color arrow = theme.getArrowColor();
+					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 50);
 					if (tail == aft) {
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, aft->centerX-55, aft->centerY + 50);
@@ -2659,18 +2809,19 @@ public:
 					}
 					else {
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, aft->centerX, aft->centerY + 50);
-						tail->DrawArrow(gRenderer, aft->centerX, aft->centerX, aft->centerY + 50, aft->centerY + 35, 8, BLACK);
+						DrawArrow(gRenderer, aft->centerX, aft->centerX, aft->centerY + 50, aft->centerY + 35, 8, theme.getArrowColor());
 					}
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				else if (!aft) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+					SDL_Color arrow = theme.getArrowColor();
+					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 50);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, tail->centerX-75, tail->centerY + 50);
 					SDL_RenderDrawLine(gRenderer, tail->centerX-75, tail->centerY + 50, tail->centerX-75, tail->centerY);
-					tail->DrawArrow(gRenderer, tail->centerX - 75, tail->centerX-35, tail->centerY, tail->centerY, 8, BLACK);
+					DrawArrow(gRenderer, tail->centerX - 75, tail->centerX-35, tail->centerY, tail->centerY, 8, theme.getArrowColor());
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				if (currPtr)	createText(generalFont, RED, "toDel", currPtr->centerX - currPtr->radius, currPtr->centerY - currPtr->radius - 25, 10 * 5, 20);
@@ -2689,16 +2840,17 @@ public:
 				if (tail && aft) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+					SDL_Color arrow = theme.getArrowColor();
+					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 50);
 					if (tail == aft) {
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, aft->centerX - 55, aft->centerY + 50);
 						SDL_RenderDrawLine(gRenderer, aft->centerX - 55, aft->centerY + 50, aft->centerX - 55, aft->centerY);
-						tail->DrawArrow(gRenderer, aft->centerX - 55, aft->centerX-35, aft->centerY, aft->centerY, 8, BLACK);
+						DrawArrow(gRenderer, aft->centerX - 55, aft->centerX-35, aft->centerY, aft->centerY, 8, theme.getArrowColor());
 					}
 					else {
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, aft->centerX, aft->centerY + 50);
-						tail->DrawArrow(gRenderer, aft->centerX, aft->centerX, aft->centerY + 50, aft->centerY + 35, 8, BLACK);
+						DrawArrow(gRenderer, aft->centerX, aft->centerX, aft->centerY + 50, aft->centerY + 35, 8, theme.getArrowColor());
 					}
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
@@ -2776,7 +2928,7 @@ public:
 		ListNode* newNode = new ListNode(val, 100, 100, 25);
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -2814,11 +2966,12 @@ public:
 				createText(generalFont, RED, "Tail", newNode->centerX - newNode->radius + 5, newNode->centerY + newNode->radius + 5, 10 * 4, 20);
 				SDL_Color old;
 				SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-				SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
+				SDL_Color arrow = theme.getArrowColor();
+				SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 				SDL_RenderDrawLine(gRenderer, newNode->centerX, newNode->centerY + 25, newNode->centerX, newNode->centerY + 50);
 				SDL_RenderDrawLine(gRenderer, newNode->centerX, newNode->centerY + 50, newNode->centerX - 75, newNode->centerY + 50);
 				SDL_RenderDrawLine(gRenderer, newNode->centerX - 75, newNode->centerY + 50, newNode->centerX - 75, newNode->centerY);
-				newNode->DrawArrow(gRenderer, newNode->centerX - 75, newNode->centerX - 35, newNode->centerY, newNode->centerY, 8, BLACK);
+				DrawArrow(gRenderer, newNode->centerX - 75, newNode->centerX - 35, newNode->centerY, newNode->centerY, 8, theme.getArrowColor());
 				SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 			}
 
@@ -2868,12 +3021,15 @@ public:
 
 };
 class DoublyLinkedListVisualizer {
+private:
+	SDL_Color bgColor;
 public:
 	DoublyListNode* head;
 	int listSize;
 	DoublyLinkedListVisualizer() {
 		head = nullptr;
 		listSize = 0;
+		bgColor = theme.getBgColor();
 	}
 	void freeMem() {
 		DoublyListNode* current = head;
@@ -2895,6 +3051,7 @@ public:
 	void initialize(vector<string> list) {
 		freeMem();
 		this->listSize = list.size();
+		if (list.size() == 0) return;
 		head = new DoublyListNode(list[0], 100, 100, 25);
 		auto clone = head;
 		for (int i = 1; i < list.size(); i++) {
@@ -2927,8 +3084,9 @@ public:
 	void resetColor() {
 		DoublyListNode* clone = head;
 		while (clone) {
-			clone->setColorNode(BLACK);
-			clone->setColorArrow(BLACK);
+			clone->setColorNode(theme.getElemColor());
+			clone->setColorArrow(theme.getArrowColor());
+			clone->setColorText(theme.getTextColor());
 			clone = clone->next;
 		}
 	}
@@ -2985,7 +3143,7 @@ public:
 		DoublyListNode* currHead = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -3099,7 +3257,7 @@ public:
 		string beforeUpdate = updateNode->val;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -3209,7 +3367,7 @@ public:
 		DoublyListNode* currHead = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -3350,7 +3508,7 @@ public:
 		DoublyListNode* newNode = new DoublyListNode(val, head?head->centerX:100 , head?head->centerY+100:100 , 25);
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -3455,8 +3613,8 @@ public:
 		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
 		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 100);
 		vector<string> code = {
-			"ListNode* toDel = head",
-			"while(index--){",
+			"DLLNode* toDel = head;",
+			"while (index--){",
 			"    toDel = toDel->next;",
 			"}",
 			"/* Re-layout the list */",
@@ -3489,7 +3647,7 @@ public:
 		DoublyListNode* prevPtr = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 400, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -3668,7 +3826,7 @@ public:
 		DoublyListNode* prevPtr = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -3800,7 +3958,7 @@ public:
 		DoublyListNode* newNode = new DoublyListNode(val, 100, 100, 25);
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -3864,12 +4022,15 @@ public:
 	}
 };
 class StackVisualizer {
+private:
+	SDL_Color bgColor;
 public:
 	ListNode* head;
 	int listSize;
 	StackVisualizer() {
 		head = nullptr;
 		listSize = 0;
+		bgColor = theme.getBgColor();
 	}
 	void freeMem() {
 		ListNode* current = head;
@@ -3891,6 +4052,7 @@ public:
 	void initialize(vector<string> list) {
 		freeMem();
 		this->listSize = list.size();
+		if (list.size() == 0) return;
 		head = new ListNode(list[0], 100, 100, 25);
 		auto clone = head;
 		for (int i = 1; i < list.size(); i++) {
@@ -3917,8 +4079,9 @@ public:
 	void resetColor() {
 		ListNode* clone = head;
 		while (clone) {
-			clone->setColorNode(BLACK);
-			clone->setColorArrow(BLACK);
+			clone->setColorNode(theme.getElemColor());
+			clone->setColorArrow(theme.getArrowColor());
+			clone->setColorText(theme.getTextColor());
 			clone = clone->next;
 		}
 	}
@@ -3969,7 +4132,7 @@ public:
 		ListNode* prevPtr = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -4093,7 +4256,7 @@ public:
 		ListNode* newNode = new ListNode(val, head?head->centerX+100:100, head?head->centerY:100 , 25);
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -4182,6 +4345,8 @@ public:
 	}
 };
 class QueueVisualizer {
+private:
+	SDL_Color bgColor;
 public:
 	ListNode* head;
 	ListNode* tail;
@@ -4190,6 +4355,7 @@ public:
 		head = nullptr;
 		tail = nullptr;
 		listSize = 0;
+		bgColor = theme.getBgColor();
 	}
 	void freeMem() {
 		ListNode* current = head;
@@ -4212,6 +4378,7 @@ public:
 	void initialize(vector<string> list) {
 		freeMem();
 		this->listSize = list.size();
+		if (list.size() == 0) return;
 		head = new ListNode(list[0], 100, 100, 25);
 		auto clone = head;
 		for (int i = 1; i < list.size(); i++) {
@@ -4239,8 +4406,9 @@ public:
 	void resetColor() {
 		ListNode* clone = head;
 		while (clone) {
-			clone->setColorNode(BLACK);
-			clone->setColorArrow(BLACK);
+			clone->setColorNode(theme.getElemColor());
+			clone->setColorArrow(theme.getArrowColor());
+			clone->setColorText(theme.getTextColor());
 			clone = clone->next;
 		}
 	}
@@ -4291,7 +4459,7 @@ public:
 		ListNode* prevPtr = nullptr;
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -4413,7 +4581,7 @@ public:
 		ListNode* newNode = new ListNode(val, tail->centerX + 100, tail->centerY, 25);
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -4522,7 +4690,7 @@ public:
 		ListNode* newNode = new ListNode(val, 100, 100, 25);
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
@@ -4595,9 +4763,53 @@ public:
 		return;
 	}
 };
+bool alertInitialize(bool& alert1, bool& alert2,bool& alert3, const string& s1,const string& s2) {
+	if (s1.size() == 0 && s2.size() == 0) return true;
+	if (s1.size() != 0) {
+		if (isExist(s1)) return true;
+		else {
+			alert3 = true;
+			alert1 = false;
+			alert2 = false;
+			return false;
+		}
+	}
+	istringstream ss(s2);
+	string tmp;
+	int temp;
+	while (ss >> tmp) {
+		if (!isNumber(tmp)) {
+			alert1 = true;
+			alert2 = false;
+			alert3 = false;
+			return false;
+		}
+		try{
+			temp = stoi(tmp);
+		}
+		catch (...){
+			alert2 = true;
+			alert1 = false;
+			alert3 = false;
+			return false;
+		}
+		
+		if (temp < 0 || temp >= 100) {
+			alert2 = true;
+			alert1 = false;
+			alert3 = false;
+			return false;
+		}
+
+	}
+	return true;
+
+
+
+}
 vector<string> initializeFormInput() {
 	SDL_Rect rect;
-	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
+	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 92);
 	SDL_Texture* form = loadImgTexture("resources/Form/InitForm.png");
 	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
 	SDL_Rect buttonPosArray[15][2];
@@ -4607,9 +4819,17 @@ vector<string> initializeFormInput() {
 		buttonPosArray[i][0] = *createRect(&rect, 1413, 1317 + 144 * i, 150, 75);
 		buttonPosArray[i][1] = *createRect(&rect, 1649, 1317 + 144 * i, 150, 75);
 	}
+	buttonPosArray[2][0] = *createRect(&rect, 2000, 1029, 50, 50);
+	buttonPosArray[2][1] = *createRect(&rect, 1819, 1029, 50, 50);
 	bool quit = false;
 	bool leftMouseDown = false;
 	int activeField = 0;
+	bool alert1Frame = false;
+	bool alert2Frame = false;
+	bool alert3Frame = false;
+	const string alert1 = "Wrong input format";
+	const string alert2 = "Value must be in the range [0,100)";
+	const string alert3 = "File does not exist";
 	string text1 = "";
 	string text2 = "";
 	SDL_Event e;
@@ -4620,6 +4840,7 @@ vector<string> initializeFormInput() {
 		SDL_RenderCopy(gRenderer,form , NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 385, 150, 75, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 150, 75, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 0, 0, 50, 50, NULL);
 		createText(generalFont, { 0 , 0 , 0 }, text1,170, 184, text1.size() * 20,40);
 		createText(generalFont, { 0 , 0 , 0 }, text2, 170, 300, text2.size() * 20, 40);
 		if (SDL_GetTicks64() % 1000 >= 500) {
@@ -4631,6 +4852,15 @@ vector<string> initializeFormInput() {
 				SDL_RenderDrawLine(gRenderer, 170 + text2.size() * 20, 300, 170 + text2.size() * 20, 334);
 				break;
 			}
+		}
+		if (alert1Frame) {
+			createText(generalFont, RED, alert1, 420, 255, alert1.size() * 12, 25);
+		}
+		else if (alert2Frame) {
+			createText(generalFont, RED, alert2, 420, 255, alert2.size() * 12, 25);
+		}
+		else if (alert3Frame) {
+			createText(generalFont, RED, alert3, 420, 140, alert3.size() * 12, 25);
 		}
 		leftMouseDown = false;
 		if (SDL_PollEvent(&e)) {
@@ -4645,12 +4875,26 @@ vector<string> initializeFormInput() {
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
+				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) { 
+					quit = true; 
+					ans.push_back("Keep");
+					SDL_DestroyTexture(buttonSpriteSheet);
+					SDL_DestroyTexture(form);
+					TTF_CloseFont(generalFont);
+					return ans;
+				}
 				if (e.button.x > 156 && e.button.x < 763 && e.button.y > 176 && e.button.y <233) activeField = 1;
 				else if (e.button.x > 156 && e.button.x < 763 && e.button.y > 292 && e.button.y < 342) activeField = 2;
 				else activeField = 0;
-				if (e.button.x > 370 && e.button.x < 520 && e.button.y > 385 && e.button.y < 460 ) quit = true;
+				if (e.button.x > 370 && e.button.x < 520 && e.button.y > 385 && e.button.y < 460) { 
+					if(alertInitialize(alert1Frame,alert2Frame,alert3Frame,trim(text1),trim(text2)))
+						quit = true; 
+				}
 				if (e.button.x > 370 && e.button.x < 520 && e.button.y > 500 && e.button.y < 575) {
-					quit = true; checkRandom = true;
+					if (alertInitialize(alert1Frame, alert2Frame, alert3Frame, trim(text1), trim(text2))) {
+						quit = true;
+						checkRandom = true;
+					}
 				}
 			case SDL_KEYDOWN:
 				if (e.key.keysym.sym == SDLK_BACKSPACE) {
@@ -4662,6 +4906,8 @@ vector<string> initializeFormInput() {
 		SDL_RenderPresent(gRenderer);
 	}
 	SDL_StopTextInput();
+	text1 = trim(text1);
+	text2 = trim(text2);
 	if (!checkRandom) {
 		string temp;
 		ifstream in(text1);
@@ -4679,6 +4925,9 @@ vector<string> initializeFormInput() {
 			}
 			
 		}
+		else {
+			return ans;
+		}
 		in.close();
 	}
 	else {
@@ -4694,23 +4943,31 @@ vector<string> initializeFormInput() {
 
 }
 
-tuple <int, string, bool,bool> indexValueFormInput(string formName) {
+tuple <int, string, bool,bool> indexValueFormInput(string formName,int indexLimit) {
 	SDL_Rect rect;
 	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
 	SDL_Texture* form = loadImgTexture("resources/Form/"+formName);
 	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
-	SDL_Rect buttonPosArray[2][2];
+	SDL_Rect buttonPosArray[3][2];
 	vector<string> ans;
 	bool checkStep = false;
 	for (int i = 0; i < 2; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 1317 + 144 * i, 200, 66);
 		buttonPosArray[i][1] = *createRect(&rect, 559, 1317 + 144 * i, 200, 66);
 	}
+	buttonPosArray[2][0] = *createRect(&rect, 2000, 1029, 50, 50);
+	buttonPosArray[2][1] = *createRect(&rect, 1819, 1029, 50, 50);
 	bool quit = false;
 	bool leftMouseDown = false;
 	int activeField = 0;
+	bool alert1Frame = false;
+	bool alert2Frame = false;
+	bool alert3Frame = false;
 	string text1 = "";
 	string text2 = "";
+	const string alert1 = "Wrong input format";
+	const string alert2 = "Index must be in the range [0," + to_string(indexLimit) + ")";
+	const string alert3 = "Value must be in the range [0,100)";
 	SDL_Event e;
 	SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
 	SDL_StartTextInput();
@@ -4719,6 +4976,7 @@ tuple <int, string, bool,bool> indexValueFormInput(string formName) {
 		SDL_RenderCopy(gRenderer, form, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 385, 200, 66, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 200, 66, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 0, 0, 50, 50, NULL);
 		createText(generalFont, { 0 , 0 , 0 }, text1, 170, 184, text1.size() * 20, 40);
 		createText(generalFont, { 0 , 0 , 0 }, text2, 170, 300, text2.size() * 20, 40);
 		if (SDL_GetTicks64() % 1000 >= 500) {
@@ -4730,6 +4988,15 @@ tuple <int, string, bool,bool> indexValueFormInput(string formName) {
 				SDL_RenderDrawLine(gRenderer, 170 + text2.size() * 20, 300, 170 + text2.size() * 20, 334);
 				break;
 			}
+		}
+		if (alert1Frame) {
+			createText(generalFont, RED, alert1, 170, 353, alert1.size() * 12, 25);
+		}
+		else if (alert2Frame) {
+			createText(generalFont, RED, alert2, 170, 353, alert2.size() * 12, 25);
+		}
+		else if (alert3Frame) {
+			createText(generalFont, RED, alert3, 170, 353, alert3.size() * 12, 25);
 		}
 		leftMouseDown = false;
 		if (SDL_PollEvent(&e)) {
@@ -4744,12 +5011,32 @@ tuple <int, string, bool,bool> indexValueFormInput(string formName) {
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
+				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) { quit = true; text1 = ""; }
 				if (e.button.x > 156 && e.button.x < 763 && e.button.y > 176 && e.button.y < 233) activeField = 1;
 				else if (e.button.x > 156 && e.button.x < 763 && e.button.y > 292 && e.button.y < 342) activeField = 2;
 				else activeField = 0;
-				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 385 && e.button.y < 451) { quit = true; checkStep = true; }
+				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 385 && e.button.y < 451) { 
+					string tmp = trim(text1);
+					string tmp1 = trim(text2);
+					if (!isNumber(tmp)) { alert1Frame = true; alert2Frame = false; alert3Frame = false; }
+					else if (tmp.size() >= 3 || stoi(tmp) >= indexLimit) { alert2Frame = true; alert1Frame = false; alert3Frame = false; }
+					else if (!isNumber(tmp1)) { alert1Frame = true; alert2Frame = false; alert3Frame = false; }
+					else if (tmp1.size() >= 3) { alert3Frame = true; alert1Frame = false; alert2Frame = false; }
+					else {
+						quit = true;
+						checkStep = true;
+					}
+				}
 				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 500 && e.button.y < 566) {
-					quit = true;
+					string tmp = trim(text1);
+					string tmp1 = trim(text2);
+					if (!isNumber(tmp)) { alert1Frame = true; alert2Frame = false; alert3Frame = false; }
+					else if (tmp.size() >= 3 || stoi(tmp) >= indexLimit) { alert2Frame = true; alert1Frame = false; alert3Frame = false; }
+					else if (!isNumber(tmp1)) { alert1Frame = true; alert2Frame = false; alert3Frame = false; }
+					else if (tmp1.size() >= 3) { alert3Frame = true; alert1Frame = false; alert2Frame = false; }
+					else {
+						quit = true;
+					}
 				}
 			case SDL_KEYDOWN:
 				if (e.key.keysym.sym == SDLK_BACKSPACE) {
@@ -4766,27 +5053,35 @@ tuple <int, string, bool,bool> indexValueFormInput(string formName) {
 	SDL_DestroyTexture(form);
 	TTF_CloseFont(generalFont);
 	if (text1 != "" && text2!="") {
-		return make_tuple(stoi(text1), text2, checkStep, true);
+		return make_tuple(stoi(trim(text1)), trim(text2), checkStep, true);
 	}
 	else return make_tuple(0, "-1", false, false);
 
 }
-tuple <int, bool, bool> indexFormInput(string formName) {
+tuple <int, bool, bool> indexFormInput(string formName,int indexLimit) {
 	SDL_Rect rect;
-	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
+	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf",50);
 	SDL_Texture* form = loadImgTexture("resources/Form/"+formName);
 	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
-	SDL_Rect buttonPosArray[2][2];
+	SDL_Texture* wrongFormat = loadImgTexture("resources/Prompt/Alert.png");
+	SDL_Texture* wrongIndex = loadImgTexture("resources/Prompt/Alert1.png");
+	SDL_Rect buttonPosArray[3][2];
 	vector<string> ans;
 	bool checkStep = false;
 	for (int i = 0; i < 2; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 1317 + 144 * i, 200, 66);
 		buttonPosArray[i][1] = *createRect(&rect, 559, 1317 + 144 * i, 200, 66);
 	}
+	buttonPosArray[2][0] = *createRect(&rect, 2000, 1029, 50, 50);
+	buttonPosArray[2][1] = *createRect(&rect, 1819, 1029, 50, 50);
 	bool quit = false;
 	bool leftMouseDown = false;
 	int activeField = 0;
+	bool alert1Frame = false;
+	bool alert2Frame = false;
 	string text1 = "";
+	const string alert1 = "Wrong input format";
+	const string alert2 = "Index must be in the range [0," + to_string(indexLimit) + ")";
 	SDL_Event e;
 	SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
 	SDL_StartTextInput();
@@ -4795,13 +5090,21 @@ tuple <int, bool, bool> indexFormInput(string formName) {
 		SDL_RenderCopy(gRenderer, form, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 375, 200, 66, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 200, 66, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 0, 0, 50, 50, NULL);
 		createText(generalFont, { 0 , 0 , 0 }, text1, 183, 246, text1.size() * 20, 40);
+
 		if (SDL_GetTicks64() % 1000 >= 500) {
 			switch (activeField) {
 			case 1:
 				SDL_RenderDrawLine(gRenderer, 183 + text1.size() * 20, 246, 183 + text1.size() * 20, 283);
 				break;
 			}
+		}
+		if (alert1Frame) {
+			createText(generalFont, RED,alert1 , 190, 300, alert1.size() * 12, 25);
+		}
+		else if (alert2Frame) {
+			createText(generalFont, RED,alert2 , 190, 300, alert2.size() * 12, 25);
 		}
 		leftMouseDown = false;
 		if (SDL_PollEvent(&e)) {
@@ -4815,11 +5118,25 @@ tuple <int, bool, bool> indexFormInput(string formName) {
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
+				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) { quit = true; text1 = ""; }
 				if (e.button.x > 169 && e.button.x < 794 && e.button.y > 228 && e.button.y < 299) activeField = 1;
 				else activeField = 0;
-				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 375 && e.button.y < 441) { quit = true; checkStep = true; }
+				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 375 && e.button.y < 441) {
+					string tmp = trim(text1);
+					if (!isNumber(tmp)) { alert1Frame = true; alert2Frame = false; }
+					else if (tmp.size() >= 3 || stoi(tmp) >= indexLimit) { alert2Frame = true; alert1Frame = false; }
+					else {
+						quit = true;
+						checkStep = true;
+					}
+				}
 				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 500 && e.button.y < 566) {
-					quit = true;
+					string tmp = trim(text1);
+					if (!isNumber(tmp)) { alert1Frame = true; alert2Frame = false; }
+					else if (tmp.size() >= 3 || stoi(tmp) >= indexLimit) { alert2Frame = true; alert1Frame = false; }
+					else {
+						quit = true;
+					}
 				}
 			case SDL_KEYDOWN:
 				if (e.key.keysym.sym == SDLK_BACKSPACE) {
@@ -4833,9 +5150,11 @@ tuple <int, bool, bool> indexFormInput(string formName) {
 
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(form);
+	SDL_DestroyTexture(wrongFormat);
+	SDL_DestroyTexture(wrongIndex);
 	TTF_CloseFont(generalFont);
 	if (text1 != "") {
-		int idx = stoi(text1);
+		int idx = stoi(trim(text1));
 		return make_tuple(idx, checkStep, true);
 	}
 	else return make_tuple(0, false, false);
@@ -4846,17 +5165,23 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
 	SDL_Texture* form = loadImgTexture("resources/Form/" + formName);
 	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
-	SDL_Rect buttonPosArray[2][2];
+	SDL_Rect buttonPosArray[3][2];
 	vector<string> ans;
 	bool checkStep = false;
 	for (int i = 0; i < 2; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 1317 + 144 * i, 200, 66);
 		buttonPosArray[i][1] = *createRect(&rect, 559, 1317 + 144 * i, 200, 66);
 	}
+	buttonPosArray[2][0] = *createRect(&rect, 2000, 1029, 50, 50);
+	buttonPosArray[2][1] = *createRect(&rect, 1819, 1029, 50, 50);
 	bool quit = false;
 	bool leftMouseDown = false;
 	int activeField = 0;
 	string text1 = "";
+	bool alert1Frame = false;
+	bool alert2Frame = false;
+	const string alert1 = "Wrong input format";
+	const string alert2 = "Value must be in the range [0,100)";
 	SDL_Event e;
 	SDL_SetRenderDrawColor(gRenderer, 0, 0, 0, 255);
 	SDL_StartTextInput();
@@ -4865,6 +5190,7 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 		SDL_RenderCopy(gRenderer, form, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], leftMouseDown, 370, 375, 200, 66, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 200, 66, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 0, 0, 50, 50, NULL);
 		createText(generalFont, { 0 , 0 , 0 }, text1, 183, 246, text1.size() * 20, 40);
 		if (SDL_GetTicks64() % 1000 >= 500) {
 			switch (activeField) {
@@ -4872,6 +5198,12 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 				SDL_RenderDrawLine(gRenderer, 183 + text1.size() * 20, 246, 183 + text1.size() * 20, 283);
 				break;
 			}
+		}
+		if (alert1Frame) {
+			createText(generalFont, RED, alert1, 190, 300, alert1.size() * 12, 25);
+		}
+		else if (alert2Frame) {
+			createText(generalFont, RED, alert2, 190, 300, alert2.size() * 12, 25);
 		}
 		leftMouseDown = false;
 		if (SDL_PollEvent(&e)) {
@@ -4885,9 +5217,18 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
+				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) { quit = true; text1 = ""; }
 				if (e.button.x > 169 && e.button.x < 794 && e.button.y > 228 && e.button.y < 299) activeField = 1;
 				else activeField = 0;
-				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 375 && e.button.y < 441) { quit = true; checkStep = true; }
+				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 375 && e.button.y < 441) { 
+					string tmp = trim(text1);
+					if (!isNumber(tmp)) { alert1Frame = true; alert2Frame = false; }
+					else if (tmp.size() >= 3) { alert2Frame = true; alert1Frame = false; }
+					else {
+						quit = true;
+						checkStep = true;
+					}
+				}
 				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 500 && e.button.y < 566) {
 					quit = true;
 				}
@@ -4905,7 +5246,7 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 	SDL_DestroyTexture(form);
 	TTF_CloseFont(generalFont);
 	if (text1 != "") {
-		return make_tuple(text1, checkStep, true);
+		return make_tuple(trim(text1), checkStep, true);
 	}
 	else return make_tuple("0", false, false);
 
@@ -4926,6 +5267,7 @@ void arrayVisualizing() {
 	buttonPosArray[10][1] = *createRect(&rect, 1819, 1029, 50, 50);;
 	SDL_Rect endButton = *createRect(&rect, 1413, 165, 100, 50);
 	SDL_Rect endButtonHover = *createRect(&rect, 1683, 165, 100, 50);
+	SDL_Color bgColor = theme.getBgColor();
 	bool quit = false;
 	bool leftMouseDown = false;
 	ArrayVisualizer arrayVisualizer;
@@ -4940,7 +5282,7 @@ void arrayVisualizing() {
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		arrayVisualizer.visualize();
 		if (!arrayVisualizer.checkAnyStep()) {
@@ -4995,12 +5337,13 @@ void arrayVisualizing() {
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray=initializeFormInput();
 					arrayVisualizer.resetStep();
-					arrayVisualizer.initialize(tempArray);
+					if((tempArray.size()!=0&&tempArray[0]!="Keep")||(tempArray.size()==0))
+						arrayVisualizer.initialize(tempArray);
 				}
 				else if (e.button.x > 200 && e.button.x < 400 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png");
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png",arrayVisualizer.n+1);
 					arrayVisualizer.resetStep();
 					if (isValid) {
 						if (checkStep) {
@@ -5018,7 +5361,7 @@ void arrayVisualizing() {
 				else if (e.button.x > 400 && e.button.x < 600 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png");
+					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png",arrayVisualizer.n);
 					arrayVisualizer.resetStep();
 					if (isValid) {
 						if (checkStep) {
@@ -5053,7 +5396,7 @@ void arrayVisualizing() {
 				else if (e.button.x > 800 && e.button.x < 1000 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, val, checkStep, isValid) = indexValueFormInput("UpdateForm.png");
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("UpdateForm.png",arrayVisualizer.n);
 					arrayVisualizer.resetStep();
 					if (isValid) {
 						if (checkStep) {
@@ -5136,6 +5479,7 @@ void linkedListVisualizing() {
 	buttonPosArray[10][1] = *createRect(&rect, 1819, 1029, 50, 50);
 	bool quit = false;
 	bool leftMouseDown = false;
+	SDL_Color bgColor = theme.getBgColor();
 	LinkedListVisualizer listVisualizer;
 	vector<string> v = { "11","23","24","35" };
 	listVisualizer.initialize(v);
@@ -5148,7 +5492,7 @@ void linkedListVisualizing() {
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		listVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
@@ -5172,12 +5516,13 @@ void linkedListVisualizing() {
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
 					//arrayVisualizer.resetStep();
-					listVisualizer.initialize(tempArray);
+					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
+						listVisualizer.initialize(tempArray);
 				}
 				else if (e.button.x > 200 && e.button.x < 400 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png");
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png",listVisualizer.listSize+1);
 					if (isValid) {
 						if (listVisualizer.listSize != 0)
 							listVisualizer.insertStep(idx, val, checkStep);
@@ -5188,7 +5533,7 @@ void linkedListVisualizing() {
 				else if (e.button.x > 400 && e.button.x < 600 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png");
+					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png",listVisualizer.listSize);
 					if (isValid) {
 						if(idx)
 							listVisualizer.deleteStep(idx, checkStep);
@@ -5207,7 +5552,7 @@ void linkedListVisualizing() {
 				else if (e.button.x > 800 && e.button.x < 1000 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx,val, checkStep, isValid) = indexValueFormInput("UpdateForm.png");
+					tie(idx,val, checkStep, isValid) = indexValueFormInput("UpdateForm.png",listVisualizer.listSize);
 					if (isValid) {
 						listVisualizer.updateStep(idx,val, checkStep);
 					}
@@ -5236,6 +5581,7 @@ void circularLinkedListVisualizing() {
 	buttonPosArray[10][1] = *createRect(&rect, 1819, 1029, 50, 50);
 	bool quit = false;
 	bool leftMouseDown = false;
+	SDL_Color bgColor = theme.getBgColor();
 	CircularLinkedListVisualizer listVisualizer;
 	vector<string> v = { "11","23","24","35" };
 	listVisualizer.initialize(v);
@@ -5248,7 +5594,7 @@ void circularLinkedListVisualizing() {
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		listVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
@@ -5272,12 +5618,13 @@ void circularLinkedListVisualizing() {
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
 					//arrayVisualizer.resetStep();
-					listVisualizer.initialize(tempArray);
+					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
+						listVisualizer.initialize(tempArray);
 				}
 				else if (e.button.x > 200 && e.button.x < 400 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png");
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png",listVisualizer.listSize+1);
 					if (isValid) {
 						if (idx == 0) {
 							if (listVisualizer.listSize != 0)
@@ -5296,7 +5643,7 @@ void circularLinkedListVisualizing() {
 				else if (e.button.x > 400 && e.button.x < 600 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png");
+					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png",listVisualizer.listSize);
 					if (isValid) {
 						if (idx)
 							listVisualizer.deleteStep(idx, checkStep);
@@ -5315,7 +5662,7 @@ void circularLinkedListVisualizing() {
 				else if (e.button.x > 800 && e.button.x < 1000 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, val, checkStep, isValid) = indexValueFormInput("UpdateForm.png");
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("UpdateForm.png",listVisualizer.listSize);
 					if (isValid) {
 						listVisualizer.updateStep(idx, val, checkStep);
 					}
@@ -5344,6 +5691,7 @@ void doublyLinkedListVisualizing() {
 	buttonPosArray[10][1] = *createRect(&rect, 1819, 1029, 50, 50);
 	bool quit = false;
 	bool leftMouseDown = false;
+	SDL_Color bgColor = theme.getBgColor();
 	DoublyLinkedListVisualizer listVisualizer;
 	vector<string> v = { "11","23","24","35" };
 	listVisualizer.initialize(v);
@@ -5356,7 +5704,7 @@ void doublyLinkedListVisualizing() {
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		listVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
@@ -5380,12 +5728,13 @@ void doublyLinkedListVisualizing() {
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
 					//arrayVisualizer.resetStep();
-					listVisualizer.initialize(tempArray);
+					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
+						listVisualizer.initialize(tempArray);
 				}
 				else if (e.button.x > 200 && e.button.x < 400 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png");
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png",listVisualizer.listSize+1);
 					if (isValid) {
 						if (idx == 0) {
 							if (listVisualizer.listSize != 0)
@@ -5401,7 +5750,7 @@ void doublyLinkedListVisualizing() {
 				else if (e.button.x > 400 && e.button.x < 600 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png");
+					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png",listVisualizer.listSize);
 					if (isValid) {
 						if (idx)
 							listVisualizer.deleteStep(idx, checkStep);
@@ -5420,7 +5769,7 @@ void doublyLinkedListVisualizing() {
 				else if (e.button.x > 800 && e.button.x < 1000 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
 					bool isValid;
-					tie(idx, val, checkStep, isValid) = indexValueFormInput("UpdateForm.png");
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("UpdateForm.png",listVisualizer.listSize);
 					if (isValid) {
 						listVisualizer.updateStep(idx, val, checkStep);
 					}
@@ -5457,6 +5806,7 @@ void stackVisualizing() {
 	bool visiblePop = false;
 	StackVisualizer stackVisualizer;
 	vector<string> v = { "11","23","24","35" };
+	SDL_Color bgColor = theme.getBgColor();
 	stackVisualizer.initialize(v);
 	int cnt = 0;
 	bool isKeyPress = false;
@@ -5467,7 +5817,7 @@ void stackVisualizing() {
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		stackVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
@@ -5496,7 +5846,8 @@ void stackVisualizing() {
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
 					//arrayVisualizer.resetStep();
-					stackVisualizer.initialize(tempArray);
+					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
+						stackVisualizer.initialize(tempArray);
 				}
 				else if (e.button.x > 200 && e.button.x < 400 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
@@ -5550,6 +5901,7 @@ void queueVisualizing() {
 	bool quit = false;
 	bool leftMouseDown = false;
 	bool visiblePop = false;
+	SDL_Color bgColor = theme.getBgColor();
 	QueueVisualizer queueVisualizer;
 	vector<string> v = { "11","23","24","35" };
 	queueVisualizer.initialize(v);
@@ -5562,7 +5914,7 @@ void queueVisualizing() {
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
+		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		queueVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
@@ -5591,7 +5943,8 @@ void queueVisualizing() {
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
 					//arrayVisualizer.resetStep();
-					queueVisualizer.initialize(tempArray);
+					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
+						queueVisualizer.initialize(tempArray);
 				}
 				else if (e.button.x > 200 && e.button.x < 400 && e.button.y > 530 && e.button.y < 630) {
 					bool checkStep;
@@ -5644,7 +5997,6 @@ void linkedListMenu() {
 	bool leftMouseDown = false;
 	while (!quit) {
 		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 		SDL_RenderCopy(gRenderer, background, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 300, 100, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], false, 400, 210, 200, 100, NULL);
@@ -5686,7 +6038,6 @@ void mainMenu() {
 	bool leftMouseDown = false;
 	while (!quit) {
 		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 		SDL_RenderCopy(gRenderer, background, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 300, 100, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], false, 400, 210, 200, 100, NULL);
