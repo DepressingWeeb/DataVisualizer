@@ -134,7 +134,7 @@ public:
 	void setBgColor(SDL_Color color) {
 		bgColor = color;
 	}
-	void setbgElemColor(SDL_Color color) {
+	void setBgElemColor(SDL_Color color) {
 		bgElemColor = color;
 	}
 	void setTextColor(SDL_Color color) {
@@ -254,6 +254,9 @@ string rtrim(const string& s)
 string trim(const string& s) {
 	return rtrim(ltrim(s));
 }
+bool isEqualColor(SDL_Color c1, SDL_Color c2) {
+	return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b && c1.a == c2.a;
+}
 void SDL_RenderDrawCircle(SDL_Renderer* renderer, int32_t x, int32_t y, int32_t radius, SDL_Color color)
 {
 	int offsetx, offsety, d;
@@ -362,6 +365,7 @@ public:
 	int y;
 	int w;
 	int h;
+	int textSize;
 	string index;
 	SDL_Color color;
 	SDL_Color bgColor;
@@ -390,7 +394,7 @@ public:
 		SDL_RenderDrawRect(gRenderer, createRect(&rect, x, y, w, h));
 		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a);
 		SDL_RenderFillRect(gRenderer, createRect(&rect, x+1, y+1, w-2, h-2));
-		createText(numberFont, textColor, val.size()==1 && val!="0" ? "0" + val : val, x + (50-theme.getTextSize())/2, y + (50 - theme.getTextSize())/2, theme.getTextSize(), theme.getTextSize());
+		createText(numberFont, textColor, val.size()==1 && val!="0" ? "0" + val : val, x + (50-textSize)/2, y + (50 - textSize)/2, textSize, textSize);
 		createText(numberFont, BLACK, index, x + 17, y + 60, 15, 20);
 		SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 	}
@@ -902,6 +906,12 @@ public:
 	void setColorArrow(SDL_Color newColor) {
 		colorArrow = newColor;
 	}
+	void setColorBg(SDL_Color newColor) {
+		colorBg = newColor;
+	}
+	void setTextSize(int size) {
+		textSize = size;
+	}
 	void setArrowPos(int x1, int y1,int x2,int y2) {
 		arrowSX = x1;
 		arrowSY = y1;
@@ -986,7 +996,7 @@ public:
 	void displayNode() {
 		SDL_RenderDrawCircle(gRenderer, centerX, centerY, radius, colorNode);
 		SDL_RenderFillCircle(gRenderer, centerX, centerY, radius - 1,colorBg);
-		createText(numberFont, colorNode, val.size() == 1 && val != "0" ? "0" + val : val, centerX - 15, centerY - 15, 30, 30);
+		createText(numberFont, colorText, val.size() == 1 && val != "0" ? "0" + val : val, centerX - textSize / 2, centerY - textSize / 2, textSize, textSize);
 		if (next) {
 			DrawArrow(gRenderer, arrowSX, arrowDX, arrowSY, arrowDY, 8, colorArrow);
 		}
@@ -6024,6 +6034,162 @@ void linkedListMenu() {
 	SDL_DestroyTexture(background);
 	return;
 }
+void themeOptions() {
+	SDL_Event e;
+	SDL_Rect rect;
+	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
+	SDL_Texture* themeOptions = loadImgTexture("resources/Theme/ThemeOptions.png");
+	TTF_Font* numberFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 90);
+	SDL_Rect apply = *createRect(&rect, 12, 911, 180, 60);
+	SDL_Rect applyHover = *createRect(&rect, 271, 905, 180, 66);
+	SDL_Rect back = *createRect(&rect, 2000, 1029, 50, 50);
+	SDL_Rect backHover = *createRect(&rect, 1819, 1029, 50, 50);
+	SDL_Rect up=*createRect(&rect, 316, 383, 24, 16);
+	SDL_Rect down= *createRect(&rect, 316, 399, 24, 16);
+	bool quit = false;
+	bool leftMouseDown = false;
+	bool checkBack = false;
+	vector<SDL_Color> choice = { theme.getBgColor(),theme.getBgElemColor(),theme.getTextColor(),theme.getElemColor(),theme.getArrowColor() };
+	int textSize = theme.getTextSize();
+	vector<pair<SDL_Rect,SDL_Color>> rects;
+	ListNode* demoNode = new ListNode("88", 374+25, 467+110, 25, new ListNode());
+	ArrayElement demoElem = ArrayElement(374, 467 + 15, 50, 50, choice[3], choice[1], choice[2], "88", "");
+	vector<SDL_Color> colorMap = {
+		{0,0,0},
+		{255,255,255},
+		{252,129,129},
+		{246,224,94},
+		{104,211,145},
+		{99, 179, 237},
+		{118, 228, 247}
+	};
+	for (int i = 0; i < 7; i++) {
+		for (int j = 0; j < 5; j++) {
+			rects.push_back(make_pair(*createRect(&rect, 240 + 110 * i, 80 + 60 * j, 95, 32),colorMap[i]));
+		}
+	}
+	SDL_Color old;
+	SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
+	SDL_SetRenderDrawColor(gRenderer, 255, 255, 0, 255);
+	SDL_StartTextInput();
+	int mouseX, mouseY;
+	while (!quit) {
+		SDL_RenderClear(gRenderer);
+		SDL_RenderCopy(gRenderer, themeOptions, NULL, &SCREEN);
+		createButton(buttonSpriteSheet, &apply, &applyHover, false, 800, 570, 180, 60, NULL);
+		createButton(buttonSpriteSheet, &back, &backHover, false, 0, 0, 50, 50, NULL);
+		createText(numberFont, BLACK, to_string(textSize), 275, 390, 2 * 10, 20);
+		/*for (int i = 0; i < 5; i++) {
+			SDL_SetRenderDrawColor(gRenderer, 0, 255, 0, 255);
+			SDL_RenderDrawRect(gRenderer, createRect(&rect,xMap[choice[i]],80+60*i,95,32));
+			SDL_SetRenderDrawColor(gRenderer, 255, 255, 0, 255);
+		}*/
+		for (int i = 0; i < rects.size(); i++) {
+			if (isEqualColor(rects[i].second, choice[i % 5])) {
+				SDL_SetRenderDrawColor(gRenderer, 0, 255, 0, 255);
+				SDL_RenderDrawRect(gRenderer, &rects[i].first);
+				SDL_SetRenderDrawColor(gRenderer, 255, 255, 0, 255);
+			}
+		}
+		SDL_SetRenderDrawColor(gRenderer, choice[0].r, choice[0].g, choice[0].b, choice[0].a);
+
+		SDL_RenderFillRect(gRenderer, createRect(&rect, 324, 467, 360, 160));
+		SDL_SetRenderDrawColor(gRenderer, 255, 255, 0, 255);
+		demoNode->setColorNode(choice[3]);
+		demoNode->setColorText(choice[2]);
+		demoNode->setColorArrow(choice[4]);
+		demoNode->setColorBg(choice[1]);
+		demoNode->setTextSize(textSize);
+		demoNode->displayNode();
+		demoElem.bgColor = choice[1];
+		demoElem.textColor = choice[2];
+		demoElem.color = choice[3];
+		demoElem.textSize = textSize;
+		demoElem.display();
+		SDL_GetMouseState(&mouseX, &mouseY);
+		for (pair<SDL_Rect, SDL_Color> p : rects) {
+			if (mouseX > p.first.x && mouseX < p.first.x + p.first.w && mouseY > p.first.y && mouseY < p.first.y + p.first.h) {
+				SDL_RenderDrawRect(gRenderer, &p.first);
+			}
+		}
+		if (mouseX > up.x && mouseX < up.x + up.w && mouseY > up.y && mouseY < up.y + up.h) {
+			SDL_RenderDrawRect(gRenderer, &up);
+		}
+		else if (mouseX > down.x && mouseX < down.x + down.w && mouseY > down.y && mouseY < down.y + down.h) {
+			SDL_RenderDrawRect(gRenderer, &down);
+		}
+		if (SDL_PollEvent(&e)) {
+			switch (e.type) {
+			case SDL_QUIT:
+				quit = true;
+				quitGame();
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) { 
+					quit = true; 
+					checkBack = true;
+				}
+				else if (e.button.x > 800 && e.button.x < 980 && e.button.y > 570 && e.button.y < 630) {
+					quit = true;
+				}
+				else if (e.button.x > up.x && e.button.x < up.x + up.w && e.button.y > up.y && e.button.y < up.y + up.h) {
+					SDL_RenderDrawRect(gRenderer, &up);
+					textSize = min(textSize + 1, 40);
+				}
+				else if (e.button.x > down.x && e.button.x < down.x + down.w && e.button.y > down.y && e.button.y < down.y + down.h) {
+					SDL_RenderDrawRect(gRenderer, &down);
+					textSize = max(textSize - 1, 20);
+				}
+				else {
+					for (pair<SDL_Rect, SDL_Color> p : rects) {
+						if (e.button.x > p.first.x && e.button.x < p.first.x + p.first.w && e.button.y > p.first.y && e.button.y < p.first.y + p.first.h) {
+							switch (p.first.y) {
+							case 80:
+								choice[0] = p.second;
+								break;
+							case 140:
+								choice[1] = p.second;
+								break;
+							case 200:
+								choice[2] = p.second;
+								break;
+							case 260:
+								choice[3] = p.second;
+								break;
+							case 320:
+								choice[4] = p.second;
+								break;
+							default:
+								break;
+							}
+						}
+					}
+				}
+			default:
+				break;
+			}
+		}
+		SDL_RenderPresent(gRenderer);
+
+
+	}
+	SDL_StopTextInput();
+	SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
+	//Theme(SDL_Color bgColor, SDL_Color bgElemColor, SDL_Color textColor,SDL_Color elemColor,SDL_Color arrowColor, int textSize)
+	if (!checkBack) {
+		theme.setBgColor(choice[0]);
+		theme.setBgElemColor(choice[1]);
+		theme.setTextColor(choice[2]);
+		theme.setElemColor(choice[3]);
+		theme.setArrowColor(choice[4]);
+		theme.setTextSize(textSize);
+
+	}
+	SDL_DestroyTexture(buttonSpriteSheet);
+	SDL_DestroyTexture(themeOptions);
+	TTF_CloseFont(numberFont);
+	return;
+}
 void mainMenu() {
 	SDL_Event e;
 	SDL_Rect rect;
@@ -6034,6 +6200,8 @@ void mainMenu() {
 		buttonPosArray[i][0] = *createRect(&rect, 1413, 309 + 144 * i, 200, 100);
 		buttonPosArray[i][1] = *createRect(&rect, 1683, 309 + 144 * i, 200, 100);
 	}
+	buttonPosArray[4][0] = *createRect(&rect, 12, 746, 109, 118);
+	buttonPosArray[4][1] = *createRect(&rect, 271, 746, 109, 118);
 	bool quit = false;
 	bool leftMouseDown = false;
 	while (!quit) {
@@ -6043,6 +6211,8 @@ void mainMenu() {
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], false, 400, 210, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 300, 320, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[3][0], &buttonPosArray[3][1], false, 400, 430, 200, 100, NULL);
+		//createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 875, 515, 109, 118, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 875, 10, 109, 118, NULL);
 		if (SDL_PollEvent(&e)) {
 			switch (e.type) {
 			case SDL_QUIT:
@@ -6055,6 +6225,7 @@ void mainMenu() {
 				else if (e.button.x > 400 && e.button.x < 600 && e.button.y > 210 && e.button.y < 310) linkedListMenu();
 				else if (e.button.x > 300 && e.button.x < 500 && e.button.y > 320 && e.button.y < 420) stackVisualizing();
 				else if (e.button.x > 400 && e.button.x < 600 && e.button.y > 430 && e.button.y < 530) queueVisualizing();
+				else if (e.button.x > 875 && e.button.x < 984 && e.button.y > 10 && e.button.y < 128) themeOptions();
 			}
 		}
 		SDL_RenderPresent(gRenderer);
