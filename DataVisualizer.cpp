@@ -20,6 +20,7 @@
 
 #include <map>
 
+
 #define RED {255,0,0}
 #define BLUE {0,0,255}
 #define GREEN {0,255,0}
@@ -346,17 +347,33 @@ void SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius,SDL_C
 	}
 	SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
 }
-void DrawArrow(SDL_Renderer* renderer, int startX, int endX, int startY, int endY, double trirad, SDL_Color color) {
+void DrawArrow(SDL_Renderer* renderer, int startX, int endX, int startY, int endY, float trirad, SDL_Color color) {
 	const double PI = 3.14159265358979323846;
 	double rad = PI / 180.0;
 	SDL_Color old;
 	SDL_GetRenderDrawColor(renderer, &old.r, &old.g, &old.b, &old.a);
 	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 	SDL_RenderDrawLine(renderer, startX, startY, endX, endY);
-	double rotation = atan2(startY - endY, endX - startX) + PI / 2.0;
-	SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation), endY + trirad * cos(rotation), endX + trirad * sin(rotation - 120.0 * rad), endY + trirad * cos(rotation - 120.0 * rad));
-	SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation - 120.0 * rad), endY + trirad * cos(rotation - 120.0 * rad), endX + trirad * sin(rotation + 120.0 * rad), endY + trirad * cos(rotation + 120.0 * rad));
-	SDL_RenderDrawLine(renderer, endX + trirad * sin(rotation + 120.0 * rad), endY + trirad * cos(rotation + 120.0 * rad), endX + trirad * sin(rotation), endY + trirad * cos(rotation));
+	float rotation = atan2(startY - endY, endX - startX) + PI / 2.0;
+	SDL_Vertex triangleVertex[3] =
+	{
+	 {
+	  { endX + trirad * sin(rotation),endY + trirad * cos(rotation)}, /* first point location */
+	  color, /* first color */
+	  { 0.f, 0.f }
+	 },
+	 {
+	  { endX + trirad * sin(rotation - 120.0 * rad), endY + trirad * cos(rotation - 120.0 * rad) }, /* second point location */
+	  color, /* second color */
+	  { 0.f, 0.f }
+	 },
+	 {
+	  { endX + trirad * sin(rotation + 120.0 * rad), endY + trirad * cos(rotation + 120.0 * rad) }, /* third point location */
+	  color, /* third color */
+	  { 0.f, 0.f }
+	 }
+	};
+	SDL_RenderGeometry(renderer, NULL, triangleVertex, 3, NULL, 0);
 	SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
 }
 class ArrayElement {
@@ -6086,7 +6103,7 @@ void themeOptions() {
 		}*/
 		for (int i = 0; i < rects.size(); i++) {
 			if (isEqualColor(rects[i].second, choice[i % 5])) {
-				SDL_SetRenderDrawColor(gRenderer, 0, 255, 0, 255);
+				SDL_SetRenderDrawColor(gRenderer, 128, 90, 213, 255);
 				SDL_RenderDrawRect(gRenderer, &rects[i].first);
 				SDL_SetRenderDrawColor(gRenderer, 255, 255, 0, 255);
 			}
@@ -6236,7 +6253,13 @@ void mainMenu() {
 	SDL_DestroyTexture(background);
 	return;
 }
-int main(int argc, char* args[]) {
+#if !SDL_VERSION_ATLEAST(2,0,17)
+#error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
+#endif
+
+// Main code
+int main(int, char**)
+{
 	init();
 	mainMenu();
 	return 0;
