@@ -218,7 +218,6 @@ void createText(TTF_Font* font, SDL_Color color, string text, int x, int y, int 
 	SDL_RenderCopy(gRenderer, texture, NULL, createRect(&rect, x, y, w, h));
 	SDL_DestroyTexture(texture);
 }
-
 void highlightCode(TTF_Font* font, SDL_Texture* explain, vector<string> code, int linesColor, int startX, int startY, SDL_Color color, bool checkStep) {
 	if (linesColor == -1) return;
 	int mouseX, mouseY;
@@ -383,6 +382,62 @@ void DrawArrow(SDL_Renderer* renderer, int startX, int endX, int startY, int end
 	};
 	SDL_RenderGeometry(renderer, NULL, triangleVertex, 3, NULL, 0);
 	SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
+}
+int highlightNode(bool isStack, int startX, int startY, SDL_Color color, int listSize) {
+	int mouseX, mouseY;
+	SDL_Rect rect;
+	SDL_GetMouseState(&mouseX, &mouseY);
+	SDL_Color oldColor;
+	SDL_GetRenderDrawColor(gRenderer, &oldColor.r, &oldColor.g, &oldColor.b, &oldColor.a);
+	SDL_SetRenderDrawColor(gRenderer, color.r, color.g, color.b, color.a);
+	int idx = -1;
+	if (!isStack) {
+		for (int i = 0; i < listSize; i++) {
+			int centerX = startX + 90 * i;
+			int centerY = startY;
+			int d = sqrt(abs(mouseX - centerX) * abs(mouseX - centerX) + abs(mouseY - centerY) * abs(mouseY - centerY));
+			if (d <= 25) {
+				SDL_RenderDrawCircle(gRenderer, centerX, centerY, 27, color);
+				idx = i;
+				break;
+			}
+		}
+	}
+	else {
+		for (int i = 0; i < listSize; i++) {
+			int centerX = startX;
+			int centerY = startY + 90 * i;
+			int d = sqrt(abs(mouseX - centerX) * abs(mouseX - centerX) + abs(mouseY - centerY) * abs(mouseY - centerY));
+			if (d <= 25) {
+				SDL_RenderDrawCircle(gRenderer, centerX, centerY, 27, color);
+				idx = i;
+				break;
+			}
+		}
+	}
+
+
+	SDL_SetRenderDrawColor(gRenderer, oldColor.r, oldColor.g, oldColor.b, oldColor.a);
+	return idx;
+}
+int highlightArrElem(int startX, int startY, SDL_Color color, int size) {
+	int mouseX, mouseY;
+	SDL_Rect rect;
+	SDL_GetMouseState(&mouseX, &mouseY);
+	SDL_Color oldColor;
+	SDL_GetRenderDrawColor(gRenderer, &oldColor.r, &oldColor.g, &oldColor.b, &oldColor.a);
+	SDL_SetRenderDrawColor(gRenderer, color.r, color.g, color.b, color.a);
+	int idx = -1;
+	for (int i = 0; i < size; i++) {
+		int x = startX + 50 * i;
+		int y = startY;
+		if (mouseX>x&&mouseX<x+50&&mouseY>y&&mouseY<y+50) {
+			SDL_RenderDrawRect(gRenderer, createRect(&rect, x-1, y-1, 52, 52));
+			idx = i;
+			break;
+		}
+	}
+	return idx;
 }
 class ArrayElement {
 public:
@@ -1979,12 +2034,12 @@ public:
 		if (tail && head) {
 			SDL_Color old;
 			SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-			SDL_Color arrow = theme.getArrowColor();
+			SDL_Color arrow = tail->colorArrow;
 			SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 			SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 50);
 			SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, head->centerX - 75, head->centerY + 50);
 			SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 50, head->centerX - 75, head->centerY);
-			DrawArrow(gRenderer, head->centerX - 75, head->centerX - 35, head->centerY, head->centerY, 8, theme.getArrowColor());
+			DrawArrow(gRenderer, head->centerX - 75, head->centerX - 35, head->centerY, head->centerY, 8, tail->colorArrow);
 			SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 		}
 	}
@@ -2216,12 +2271,12 @@ public:
 				if (tail) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_Color arrow = theme.getArrowColor();
+					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
 					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
 					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
-					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, theme.getArrowColor());
+					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, tail->colorArrow);
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				newNode->displayNode();
@@ -2241,12 +2296,12 @@ public:
 				if (tail) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_Color arrow = theme.getArrowColor();
+					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
 					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
 					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
-					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, theme.getArrowColor());
+					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, tail->colorArrow);
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				newNode->displayNode();
@@ -2372,12 +2427,12 @@ public:
 				if (tail) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_Color arrow = theme.getArrowColor();
+					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
 					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
 					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
-					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, theme.getArrowColor());
+					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, tail->colorArrow);
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				newNode->displayNode();
@@ -2396,12 +2451,12 @@ public:
 				if (tail) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_Color arrow = theme.getArrowColor();
+					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
 					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
 					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
-					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, theme.getArrowColor());
+					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, tail->colorArrow);
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				newNode->displayNode();
@@ -2553,7 +2608,7 @@ public:
 						prev->setArrowPos(head->centerX - 75, head->centerY, head->centerX - 35, head->centerY);
 						SDL_Color old;
 						SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-						SDL_Color arrow = theme.getArrowColor();
+						SDL_Color arrow = tail->colorArrow;
 						SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 						SDL_RenderDrawLine(gRenderer, prev->centerX, prev->centerY + 25, prev->centerX, prev->centerY + 50);
 						SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
@@ -2578,12 +2633,12 @@ public:
 					if (tail) {
 						SDL_Color old;
 						SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-						SDL_Color arrow = theme.getArrowColor();
+						SDL_Color arrow = tail->colorArrow;
 						SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 50);
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, head->centerX - 75, head->centerY + 50);
 						SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 50, head->centerX - 75, head->centerY);
-						DrawArrow(gRenderer, head->centerX - 75, head->centerX - 35, head->centerY, head->centerY, 8, theme.getArrowColor());
+						DrawArrow(gRenderer, head->centerX - 75, head->centerX - 35, head->centerY, head->centerY, 8, tail->colorArrow);
 						SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 					}
 				}
@@ -2836,7 +2891,7 @@ public:
 				if (tail && aft) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_Color arrow = theme.getArrowColor();
+					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 50);
 					if (tail == aft) {
@@ -2845,19 +2900,19 @@ public:
 					}
 					else {
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, aft->centerX, aft->centerY + 50);
-						DrawArrow(gRenderer, aft->centerX, aft->centerX, aft->centerY + 50, aft->centerY + 35, 8, theme.getArrowColor());
+						DrawArrow(gRenderer, aft->centerX, aft->centerX, aft->centerY + 50, aft->centerY + 35, 8, tail->colorArrow);
 					}
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				else if (!aft) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_Color arrow = theme.getArrowColor();
+					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 50);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, tail->centerX - 75, tail->centerY + 50);
 					SDL_RenderDrawLine(gRenderer, tail->centerX - 75, tail->centerY + 50, tail->centerX - 75, tail->centerY);
-					DrawArrow(gRenderer, tail->centerX - 75, tail->centerX - 35, tail->centerY, tail->centerY, 8, theme.getArrowColor());
+					DrawArrow(gRenderer, tail->centerX - 75, tail->centerX - 35, tail->centerY, tail->centerY, 8, tail->colorArrow);
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
 				if (currPtr)	createText(generalFont, RED, "toDel", currPtr->centerX - currPtr->radius, currPtr->centerY - currPtr->radius - 25, 10 * 5, 20);
@@ -2876,17 +2931,17 @@ public:
 				if (tail && aft) {
 					SDL_Color old;
 					SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-					SDL_Color arrow = theme.getArrowColor();
+					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 50);
 					if (tail == aft) {
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, aft->centerX - 55, aft->centerY + 50);
 						SDL_RenderDrawLine(gRenderer, aft->centerX - 55, aft->centerY + 50, aft->centerX - 55, aft->centerY);
-						DrawArrow(gRenderer, aft->centerX - 55, aft->centerX - 35, aft->centerY, aft->centerY, 8, theme.getArrowColor());
+						DrawArrow(gRenderer, aft->centerX - 55, aft->centerX - 35, aft->centerY, aft->centerY, 8, tail->colorArrow);
 					}
 					else {
 						SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 50, aft->centerX, aft->centerY + 50);
-						DrawArrow(gRenderer, aft->centerX, aft->centerX, aft->centerY + 50, aft->centerY + 35, 8, theme.getArrowColor());
+						DrawArrow(gRenderer, aft->centerX, aft->centerX, aft->centerY + 50, aft->centerY + 35, 8, tail->colorArrow);
 					}
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
@@ -3002,12 +3057,12 @@ public:
 				createText(generalFont, RED, "Tail", newNode->centerX - newNode->radius + 5, newNode->centerY + newNode->radius + 5, 10 * 4, 20);
 				SDL_Color old;
 				SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
-				SDL_Color arrow = theme.getArrowColor();
+				SDL_Color arrow = tail->colorArrow;
 				SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 				SDL_RenderDrawLine(gRenderer, newNode->centerX, newNode->centerY + 25, newNode->centerX, newNode->centerY + 50);
 				SDL_RenderDrawLine(gRenderer, newNode->centerX, newNode->centerY + 50, newNode->centerX - 75, newNode->centerY + 50);
 				SDL_RenderDrawLine(gRenderer, newNode->centerX - 75, newNode->centerY + 50, newNode->centerX - 75, newNode->centerY);
-				DrawArrow(gRenderer, newNode->centerX - 75, newNode->centerX - 35, newNode->centerY, newNode->centerY, 8, theme.getArrowColor());
+				DrawArrow(gRenderer, newNode->centerX - 75, newNode->centerX - 35, newNode->centerY, newNode->centerY, 8, tail->colorArrow);
 				SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 			}
 
@@ -5287,7 +5342,96 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 	else return make_tuple("0", false, false);
 
 }
+void ImGuiChangeColorNode(ListNode* node,bool& shownWindow) {
+	SDL_Color colorNode = node->colorNode;
+	SDL_Color colorText = node->colorText;
+	SDL_Color colorBg = node->colorBg;
+	SDL_Color colorArrow = node->colorArrow;
+	ImVec4 colorNodeF = ImVec4((float)colorNode.r / 255.0, (float)colorNode.g / 255.0, (float)colorNode.b / 255.0, 1.00f);
+	ImVec4 colorTextF = ImVec4((float)colorText.r / 255.0, (float)colorText.g / 255.0, (float)colorText.b / 255.0, 1.00f);
+	ImVec4 colorBgF = ImVec4((float)colorBg.r / 255.0, (float)colorBg.g / 255.0, (float)colorBg.b / 255.0, 1.00f);
+	ImVec4 colorArrowF = ImVec4((float)colorArrow.r / 255.0, (float)colorArrow.g / 255.0, (float)colorArrow.b / 255.0, 1.00f);
+	ImGui::Begin("Options",&shownWindow);
+	ImGui::Text("Node size :          25");
+	ImGui::ColorEdit3("Node color           ", (float*)&colorNodeF);
+	ImGui::ColorEdit3("Text color           ", (float*)&colorTextF);
+	ImGui::ColorEdit3("Node background color", (float*)&colorBgF);
+	ImGui::ColorEdit3("Arrow color          ", (float*)&colorArrowF);
+	ImGui::SliderInt("Text size", &node->textSize, 20, 40);
+	ImGui::End();
+	node->colorNode = { (Uint8)(colorNodeF.x * 255), (Uint8)(colorNodeF.y * 255), (Uint8)(colorNodeF.z * 255) };
+	node->colorText = { (Uint8)(colorTextF.x * 255), (Uint8)(colorTextF.y * 255), (Uint8)(colorTextF.z * 255) };
+	node->colorBg = { (Uint8)(colorBgF.x * 255), (Uint8)(colorBgF.y * 255), (Uint8)(colorBgF.z * 255) };
+	node->colorArrow = { (Uint8)(colorArrowF.x * 255), (Uint8)(colorArrowF.y * 255), (Uint8)(colorArrowF.z * 255) };
 
+}
+void ImGuiChangeColorDoublyNode(DoublyListNode* node, bool& shownWindow) {
+	SDL_Color colorNode = node->colorNode;
+	SDL_Color colorText = node->colorText;
+	SDL_Color colorBg = node->colorBg;
+	SDL_Color colorArrow = node->colorArrow;
+	ImVec4 colorNodeF = ImVec4((float)colorNode.r / 255.0, (float)colorNode.g / 255.0, (float)colorNode.b / 255.0, 1.00f);
+	ImVec4 colorTextF = ImVec4((float)colorText.r / 255.0, (float)colorText.g / 255.0, (float)colorText.b / 255.0, 1.00f);
+	ImVec4 colorBgF = ImVec4((float)colorBg.r / 255.0, (float)colorBg.g / 255.0, (float)colorBg.b / 255.0, 1.00f);
+	ImVec4 colorArrowF = ImVec4((float)colorArrow.r / 255.0, (float)colorArrow.g / 255.0, (float)colorArrow.b / 255.0, 1.00f);
+	ImGui::Begin("Options", &shownWindow);
+	ImGui::Text("Node size :          25");
+	ImGui::ColorEdit3("Node color           ", (float*)&colorNodeF);
+	ImGui::ColorEdit3("Text color           ", (float*)&colorTextF);
+	ImGui::ColorEdit3("Node background color", (float*)&colorBgF);
+	ImGui::ColorEdit3("Arrow color          ", (float*)&colorArrowF);
+	ImGui::SliderInt("Text size", &node->textSize, 20, 40);
+	ImGui::End();
+	node->colorNode = { (Uint8)(colorNodeF.x * 255), (Uint8)(colorNodeF.y * 255), (Uint8)(colorNodeF.z * 255) };
+	node->colorText = { (Uint8)(colorTextF.x * 255), (Uint8)(colorTextF.y * 255), (Uint8)(colorTextF.z * 255) };
+	node->colorBg = { (Uint8)(colorBgF.x * 255), (Uint8)(colorBgF.y * 255), (Uint8)(colorBgF.z * 255) };
+	node->colorArrow = { (Uint8)(colorArrowF.x * 255), (Uint8)(colorArrowF.y * 255), (Uint8)(colorArrowF.z * 255) };
+
+}
+void ImGuiChangeColorArrElem(ArrayElement& elem, bool& shownWindow) {
+	SDL_Color colorNode = elem.color;
+	SDL_Color colorText = elem.textColor;
+	SDL_Color colorBg = elem.bgColor;
+	ImVec4 colorNodeF = ImVec4((float)colorNode.r / 255.0, (float)colorNode.g / 255.0, (float)colorNode.b / 255.0, 1.00f);
+	ImVec4 colorTextF = ImVec4((float)colorText.r / 255.0, (float)colorText.g / 255.0, (float)colorText.b / 255.0, 1.00f);
+	ImVec4 colorBgF = ImVec4((float)colorBg.r / 255.0, (float)colorBg.g / 255.0, (float)colorBg.b / 255.0, 1.00f);
+	ImGui::Begin("Options", &shownWindow);
+	ImGui::Text("Element size :          25");
+	ImGui::ColorEdit3("Element color           ", (float*)&colorNodeF);
+	ImGui::ColorEdit3("Text color           ", (float*)&colorTextF);
+	ImGui::ColorEdit3("Element background color", (float*)&colorBgF);
+	ImGui::SliderInt("Text size", &elem.textSize, 20, 40);
+	ImGui::End();
+	elem.color = { (Uint8)(colorNodeF.x * 255), (Uint8)(colorNodeF.y * 255), (Uint8)(colorNodeF.z * 255) };
+	elem.textColor = { (Uint8)(colorTextF.x * 255), (Uint8)(colorTextF.y * 255), (Uint8)(colorTextF.z * 255) };
+	elem.bgColor = { (Uint8)(colorBgF.x * 255), (Uint8)(colorBgF.y * 255), (Uint8)(colorBgF.z * 255) };
+}
+void ImGuiChangeColorElem(vector<SDL_Color>& choice, int& textSize, bool& shownWindow) {
+	SDL_Color colorNode = choice[3];
+	SDL_Color colorText = choice[2];
+	SDL_Color colorBg = choice[0];
+	SDL_Color colorElemBg = choice[1];
+	SDL_Color colorArrow = choice[4];
+	ImVec4 colorNodeF = ImVec4((float)colorNode.r / 255.0, (float)colorNode.g / 255.0, (float)colorNode.b / 255.0, 1.00f);
+	ImVec4 colorTextF = ImVec4((float)colorText.r / 255.0, (float)colorText.g / 255.0, (float)colorText.b / 255.0, 1.00f);
+	ImVec4 colorBgF = ImVec4((float)colorBg.r / 255.0, (float)colorBg.g / 255.0, (float)colorBg.b / 255.0, 1.00f);
+	ImVec4 colorElemBgF = ImVec4((float)colorElemBg.r / 255.0, (float)colorElemBg.g / 255.0, (float)colorElemBg.b / 255.0, 1.00f);
+	ImVec4 colorArrowF = ImVec4((float)colorArrow.r / 255.0, (float)colorArrow.g / 255.0, (float)colorArrow.b / 255.0, 1.00f);
+	ImGui::Begin("Options", &shownWindow);
+	ImGui::Text("Node size :          25");
+	ImGui::ColorEdit3("Node color           ", (float*)&colorNodeF);
+	ImGui::ColorEdit3("Text color           ", (float*)&colorTextF);
+	ImGui::ColorEdit3("Background color     ", (float*)&colorBgF);
+	ImGui::ColorEdit3("Node background color", (float*)&colorElemBgF);
+	ImGui::ColorEdit3("Arrow color          ", (float*)&colorArrowF);
+	ImGui::SliderInt("Text size", &textSize, 20, 40);
+	ImGui::End();
+	choice[3] = { (Uint8)(colorNodeF.x * 255), (Uint8)(colorNodeF.y * 255), (Uint8)(colorNodeF.z * 255) };
+	choice[2] = { (Uint8)(colorTextF.x * 255), (Uint8)(colorTextF.y * 255), (Uint8)(colorTextF.z * 255) };
+	choice[0] = { (Uint8)(colorBgF.x * 255), (Uint8)(colorBgF.y * 255), (Uint8)(colorBgF.z * 255) };
+	choice[1] = { (Uint8)(colorElemBgF.x * 255), (Uint8)(colorElemBgF.y * 255), (Uint8)(colorElemBgF.z * 255) };
+	choice[4] = { (Uint8)(colorArrowF.x * 255), (Uint8)(colorArrowF.y * 255), (Uint8)(colorArrowF.z * 255) };
+}
 void arrayVisualizing() {
 	SDL_Event e;
 	SDL_Rect rect;
@@ -5315,13 +5459,28 @@ void arrayVisualizing() {
 	int idx = -1;
 	bool guideTextVisible = false;
 	string val = "";
+	int highlightIdx = -1;
+	int activeElem = -1;
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	ImGui::StyleColorsDark();
+	ImGui_ImplSDL2_InitForSDLRenderer(window, gRenderer);
+	ImGui_ImplSDLRenderer_Init(gRenderer);
+	bool shownImGuiWindow = true;
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
+		ImGui_ImplSDLRenderer_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		//createText(generalFont, BLACK, isEqualColor(BLACK, arrayVisualizer.arr[0].textColor) ? "BLACK" : "WHITE", 0, 0, 50, 50);
 		arrayVisualizer.visualize();
+		highlightIdx = highlightArrElem(100,100,YELLOW,arrayVisualizer.n);
 		if (!arrayVisualizer.checkAnyStep()) {
 			createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
 			createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], false, 200, 530, 200, 100, NULL);
@@ -5334,6 +5493,9 @@ void arrayVisualizing() {
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 		}
 		//isKeyPress = arrayVisualizer.keyboardEvent(idx,val);
+		if (activeElem != -1 && shownImGuiWindow&& !arrayVisualizer.checkAnyStep()) {
+			ImGuiChangeColorArrElem(arrayVisualizer.arr[activeElem], shownImGuiWindow);
+		}
 		if (arrayVisualizer.checkStepEqualZero()) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 		//if (cnt == 400) { 
 		//	arrayVisualizer.stepInsert = 0; 
@@ -5343,12 +5505,17 @@ void arrayVisualizing() {
 		//}
 		//if (cnt == 300) { arrayVisualizer.insert(1,"23"); }
 		if (SDL_PollEvent(&e)) {
+			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
 			case SDL_QUIT:
 				quit = true;
 				quitGame();
 				break;
 			case SDL_MOUSEBUTTONDOWN:
+				if (highlightIdx != -1) {
+					shownImGuiWindow = true;
+					activeElem = highlightIdx;
+				}
 				if (arrayVisualizer.checkAnyStep() && e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) {
 					if (arrayVisualizer.stepInsert >= 0) {
 						for (int i = 0; i < 100; i++)
@@ -5495,10 +5662,16 @@ void arrayVisualizing() {
 				}
 			}
 		}
+		ImGui::Render();
+		SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		SDL_RenderPresent(gRenderer);
 	}
 	SDL_DestroyTexture(buttonSpriteSheet);
 	TTF_CloseFont(generalFont);
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 	return;
 }
 void linkedListVisualizing() {
@@ -5526,10 +5699,24 @@ void linkedListVisualizing() {
 	int idx = -1;
 	bool guideTextVisible = false;
 	string val = "";
+	int highlightIdx = -1;
+	int activeNode = -1;
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	ImGui::StyleColorsDark();
+	ImGui_ImplSDL2_InitForSDLRenderer(window, gRenderer);
+	ImGui_ImplSDLRenderer_Init(gRenderer);
+	bool shownImGuiWindow = true;
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
+		ImGui_ImplSDLRenderer_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		listVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
@@ -5538,10 +5725,15 @@ void linkedListVisualizing() {
 		createButton(buttonSpriteSheet, &buttonPosArray[3][0], &buttonPosArray[3][1], false, 600, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 800, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
+		highlightIdx=highlightNode(false, 100, 100, YELLOW, listVisualizer.listSize);
+		if (activeNode != -1 && shownImGuiWindow) {
+			ImGuiChangeColorNode(listVisualizer.getNode(activeNode),shownImGuiWindow);
+		}
 		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
 		if (isKeyPress) guideTextVisible = false;
 		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 		if (SDL_PollEvent(&e)) {
+			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
 			case SDL_QUIT:
 				quit = true;
@@ -5549,6 +5741,11 @@ void linkedListVisualizing() {
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
+				if (highlightIdx != -1) {
+					shownImGuiWindow = true;
+					activeNode = highlightIdx;
+				}
+				
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
@@ -5596,10 +5793,16 @@ void linkedListVisualizing() {
 				}
 			}
 		}
+		ImGui::Render();
+		SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		SDL_RenderPresent(gRenderer);
 	}
 	SDL_DestroyTexture(buttonSpriteSheet);
 	TTF_CloseFont(generalFont);
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 	listVisualizer.freeMem();
 	return;
 }
@@ -5628,10 +5831,24 @@ void circularLinkedListVisualizing() {
 	int idx = -1;
 	bool guideTextVisible = false;
 	string val = "";
+	int highlightIdx = -1;
+	int activeNode = -1;
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	ImGui::StyleColorsDark();
+	ImGui_ImplSDL2_InitForSDLRenderer(window, gRenderer);
+	ImGui_ImplSDLRenderer_Init(gRenderer);
+	bool shownImGuiWindow = true;
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
+		ImGui_ImplSDLRenderer_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		listVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
@@ -5641,9 +5858,14 @@ void circularLinkedListVisualizing() {
 		createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 800, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
 		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
+		highlightIdx = highlightNode(false, 100, 100, YELLOW, listVisualizer.listSize);
+		if (activeNode != -1 && shownImGuiWindow) {
+			ImGuiChangeColorNode(listVisualizer.getNode(activeNode), shownImGuiWindow);
+		}
 		if (isKeyPress) guideTextVisible = false;
 		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 		if (SDL_PollEvent(&e)) {
+			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
 			case SDL_QUIT:
 				quit = true;
@@ -5651,6 +5873,10 @@ void circularLinkedListVisualizing() {
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
+				if (highlightIdx != -1) {
+					shownImGuiWindow = true;
+					activeNode = highlightIdx;
+				}
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
@@ -5706,11 +5932,17 @@ void circularLinkedListVisualizing() {
 				}
 			}
 		}
+		ImGui::Render();
+		SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		SDL_RenderPresent(gRenderer);
 	}
 	SDL_DestroyTexture(buttonSpriteSheet);
 	TTF_CloseFont(generalFont);
 	listVisualizer.freeMem();
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 	return;
 }
 void doublyLinkedListVisualizing() {
@@ -5738,10 +5970,24 @@ void doublyLinkedListVisualizing() {
 	int idx = -1;
 	bool guideTextVisible = false;
 	string val = "";
+	int highlightIdx = -1;
+	int activeNode = -1;
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	ImGui::StyleColorsDark();
+	ImGui_ImplSDL2_InitForSDLRenderer(window, gRenderer);
+	ImGui_ImplSDLRenderer_Init(gRenderer);
+	bool shownImGuiWindow = true;
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
+		ImGui_ImplSDLRenderer_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		listVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
@@ -5751,9 +5997,14 @@ void doublyLinkedListVisualizing() {
 		createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 800, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
 		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
+		highlightIdx = highlightNode(false, 100, 100, YELLOW, listVisualizer.listSize);
+		if (activeNode != -1 && shownImGuiWindow) {
+			ImGuiChangeColorDoublyNode(listVisualizer.getNode(activeNode), shownImGuiWindow);
+		}
 		if (isKeyPress) guideTextVisible = false;
 		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 		if (SDL_PollEvent(&e)) {
+			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
 			case SDL_QUIT:
 				quit = true;
@@ -5761,6 +6012,10 @@ void doublyLinkedListVisualizing() {
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
+				if (highlightIdx != -1) {
+					shownImGuiWindow = true;
+					activeNode = highlightIdx;
+				}
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
@@ -5813,11 +6068,17 @@ void doublyLinkedListVisualizing() {
 				}
 			}
 		}
+		ImGui::Render();
+		SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		SDL_RenderPresent(gRenderer);
 	}
 	SDL_DestroyTexture(buttonSpriteSheet);
 	TTF_CloseFont(generalFont);
 	listVisualizer.freeMem();
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 	return;
 }
 void stackVisualizing() {
@@ -5851,10 +6112,24 @@ void stackVisualizing() {
 	int idx = -1;
 	bool guideTextVisible = false;
 	string val = "";
+	int highlightIdx = -1;
+	int activeNode = -1;
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	ImGui::StyleColorsDark();
+	ImGui_ImplSDL2_InitForSDLRenderer(window, gRenderer);
+	ImGui_ImplSDLRenderer_Init(gRenderer);
+	bool shownImGuiWindow = true;
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
+		ImGui_ImplSDLRenderer_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		stackVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
@@ -5862,9 +6137,14 @@ void stackVisualizing() {
 		createButton(buttonSpriteSheet, &buttonPosArray[6][0], &buttonPosArray[6][1], false, 400, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
 		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
+		highlightIdx = highlightNode(true, 100, 100, YELLOW, stackVisualizer.listSize);
+		if (activeNode != -1 && shownImGuiWindow) {
+			ImGuiChangeColorNode(stackVisualizer.getNode(activeNode), shownImGuiWindow);
+		}
 		if (isKeyPress) guideTextVisible = false;
 		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 200, 250, 800, 40);
 		if (SDL_PollEvent(&e)) {
+			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
 			case SDL_QUIT:
 				quit = true;
@@ -5879,6 +6159,10 @@ void stackVisualizing() {
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
+				if (highlightIdx != -1) {
+					shownImGuiWindow = true;
+					activeNode = highlightIdx;
+				}
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
@@ -5910,11 +6194,17 @@ void stackVisualizing() {
 			createButton(buttonSpriteSheet, &buttonPosArray[8][0], &buttonPosArray[8][1], leftMouseDown, 650, 460, 200, 66, NULL);
 			createButton(buttonSpriteSheet, &buttonPosArray[9][0], &buttonPosArray[9][1], leftMouseDown, 650, 550, 200, 66, NULL);
 		}
+		ImGui::Render();
+		SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		SDL_RenderPresent(gRenderer);
 	}
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(popForm);
 	TTF_CloseFont(generalFont);
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 	return;
 }
 void queueVisualizing() {
@@ -5948,10 +6238,24 @@ void queueVisualizing() {
 	int idx = -1;
 	bool guideTextVisible = false;
 	string val = "";
+	int highlightIdx = -1;
+	int activeNode = -1;
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	ImGui::StyleColorsDark();
+	ImGui_ImplSDL2_InitForSDLRenderer(window, gRenderer);
+	ImGui_ImplSDLRenderer_Init(gRenderer);
+	bool shownImGuiWindow = true;
 	while (!quit) {
 		cnt++;
 		SDL_RenderClear(gRenderer);
 		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
+		ImGui_ImplSDLRenderer_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
 		SDL_RenderFillRect(gRenderer, &SCREEN);
 		queueVisualizer.visualize();
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
@@ -5959,9 +6263,14 @@ void queueVisualizing() {
 		createButton(buttonSpriteSheet, &buttonPosArray[6][0], &buttonPosArray[6][1], false, 400, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
 		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
+		highlightIdx = highlightNode(false, 100, 100, YELLOW, queueVisualizer.listSize);
+		if (activeNode != -1 && shownImGuiWindow) {
+			ImGuiChangeColorNode(queueVisualizer.getNode(activeNode), shownImGuiWindow);
+		}
 		if (isKeyPress) guideTextVisible = false;
 		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 200, 250, 800, 40);
 		if (SDL_PollEvent(&e)) {
+			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
 			case SDL_QUIT:
 				quit = true;
@@ -5976,6 +6285,10 @@ void queueVisualizing() {
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
+				if (highlightIdx != -1) {
+					shownImGuiWindow = true;
+					activeNode = highlightIdx;
+				}
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
@@ -6010,11 +6323,17 @@ void queueVisualizing() {
 			createButton(buttonSpriteSheet, &buttonPosArray[8][0], &buttonPosArray[8][1], leftMouseDown, 650, 460, 200, 66, NULL);
 			createButton(buttonSpriteSheet, &buttonPosArray[9][0], &buttonPosArray[9][1], leftMouseDown, 650, 550, 200, 66, NULL);
 		}
+		ImGui::Render();
+		SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		SDL_RenderPresent(gRenderer);
 	}
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(popForm);
 	TTF_CloseFont(generalFont);
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 	return;
 }
 void linkedListMenu() {
@@ -6071,6 +6390,8 @@ void themeOptions() {
 	SDL_Rect applyHover = *createRect(&rect, 271, 905, 180, 66);
 	SDL_Rect back = *createRect(&rect, 2000, 1029, 50, 50);
 	SDL_Rect backHover = *createRect(&rect, 1819, 1029, 50, 50);
+	SDL_Rect custom = *createRect(&rect, 12, 1023, 132, 46);
+	SDL_Rect customHover = *createRect(&rect, 271, 1023, 132, 46);
 	SDL_Rect up = *createRect(&rect, 316, 383, 24, 16);
 	SDL_Rect down = *createRect(&rect, 316, 399, 24, 16);
 	bool quit = false;
@@ -6098,19 +6419,34 @@ void themeOptions() {
 	SDL_Color old;
 	SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
 	SDL_SetRenderDrawColor(gRenderer, 255, 255, 0, 255);
-	SDL_StartTextInput();
 	int mouseX, mouseY;
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	ImGui::StyleColorsDark();
+	ImGui_ImplSDL2_InitForSDLRenderer(window, gRenderer);
+	ImGui_ImplSDLRenderer_Init(gRenderer);
+	bool ImGuiWindowVisible = false;
 	while (!quit) {
 		SDL_RenderClear(gRenderer);
+		ImGui_ImplSDLRenderer_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
 		SDL_RenderCopy(gRenderer, themeOptions, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &apply, &applyHover, false, 800, 570, 180, 60, NULL);
 		createButton(buttonSpriteSheet, &back, &backHover, false, 0, 0, 50, 50, NULL);
+		createButton(buttonSpriteSheet, &custom, &customHover, false, 722, 380, 132, 46, NULL);
 		createText(numberFont, BLACK, to_string(textSize), 275, 390, 2 * 10, 20);
 		/*for (int i = 0; i < 5; i++) {
 			SDL_SetRenderDrawColor(gRenderer, 0, 255, 0, 255);
 			SDL_RenderDrawRect(gRenderer, createRect(&rect,xMap[choice[i]],80+60*i,95,32));
 			SDL_SetRenderDrawColor(gRenderer, 255, 255, 0, 255);
 		}*/
+		if (ImGuiWindowVisible) {
+			ImGuiChangeColorElem(choice, textSize, ImGuiWindowVisible);
+		}
 		for (int i = 0; i < rects.size(); i++) {
 			if (isEqualColor(rects[i].second, choice[i % 5])) {
 				SDL_SetRenderDrawColor(gRenderer, 128, 90, 213, 255);
@@ -6146,6 +6482,7 @@ void themeOptions() {
 			SDL_RenderDrawRect(gRenderer, &down);
 		}
 		if (SDL_PollEvent(&e)) {
+			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
 			case SDL_QUIT:
 				quit = true;
@@ -6156,7 +6493,11 @@ void themeOptions() {
 					quit = true;
 					checkBack = true;
 				}
-				else if (e.button.x > 800 && e.button.x < 980 && e.button.y > 570 && e.button.y < 630) {
+				else if (e.button.x > 722 && e.button.x < 854 && e.button.y > 380 && e.button.y < 426 && !ImGuiWindowVisible) {
+					ImGuiWindowVisible = !ImGuiWindowVisible;
+				}
+				if (ImGuiWindowVisible) break;
+				if (e.button.x > 800 && e.button.x < 980 && e.button.y > 570 && e.button.y < 630) {
 					quit = true;
 				}
 				else if (e.button.x > up.x && e.button.x < up.x + up.w && e.button.y > up.y && e.button.y < up.y + up.h) {
@@ -6196,11 +6537,13 @@ void themeOptions() {
 				break;
 			}
 		}
+		ImGui::Render();
+		SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		SDL_RenderPresent(gRenderer);
 
 
 	}
-	SDL_StopTextInput();
 	SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 	//Theme(SDL_Color bgColor, SDL_Color bgElemColor, SDL_Color textColor,SDL_Color elemColor,SDL_Color arrowColor, int textSize)
 	if (!checkBack) {
@@ -6215,6 +6558,9 @@ void themeOptions() {
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(themeOptions);
 	TTF_CloseFont(numberFont);
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 	return;
 }
 void mainMenu() {
