@@ -3781,6 +3781,8 @@ public:
 			else {
 				if (currStep == totalSteps - 3) {
 					prev->setArrowNextDownRight();
+					toDelete->setArrowPrevUpLeft();
+					prev->next = toDelete;
 					currPtr = toDelete;
 					if (aft) {
 						//aft->setArrowPrevPos(aft->centerX - aft->radius, aft->centerY, prev->centerX + 35, prev->centerY);
@@ -4885,7 +4887,7 @@ bool alertInitialize(bool& alert1, bool& alert2, bool& alert3, const string& s1,
 			return false;
 		}
 
-		if (temp < 0 || temp >= 100) {
+		if (tmp.size() >= 3||temp < 0 || temp >= 100) {
 			alert2 = true;
 			alert1 = false;
 			alert3 = false;
@@ -4961,8 +4963,8 @@ vector<string> initializeFormInput() {
 				quitGame();
 				break;
 			case SDL_TEXTINPUT:
-				if (activeField == 1) text1 += e.text.text;
-				else if (activeField == 2) text2 += e.text.text;
+				if (activeField == 1 &&text1.size()<30) text1 += e.text.text;
+				else if (activeField == 2&&text2.size()<30) text2 += e.text.text;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
@@ -5003,9 +5005,8 @@ vector<string> initializeFormInput() {
 		string temp;
 		ifstream in(text1);
 		if (text1 != "" && in.good()) {
-			while (!in.eof()) {
-				in >> temp;
-				ans.push_back(temp);
+			while (in >> temp) {
+				if(isNumber(temp)&&temp.size()<3)	ans.push_back(temp);
 			}
 		}
 		else if (text2 != "") {
@@ -5097,8 +5098,8 @@ tuple <int, string, bool, bool> indexValueFormInput(string formName, int indexLi
 				quitGame();
 				break;
 			case SDL_TEXTINPUT:
-				if (activeField == 1) text1 += e.text.text;
-				else if (activeField == 2) text2 += e.text.text;
+				if (activeField == 1&&text1.size()<30) text1 += e.text.text;
+				else if (activeField == 2&&text2.size()<30) text2 += e.text.text;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
@@ -5205,7 +5206,7 @@ tuple <int, bool, bool> indexFormInput(string formName, int indexLimit) {
 				quitGame();
 				break;
 			case SDL_TEXTINPUT:
-				if (activeField == 1) text1 += e.text.text;
+				if (activeField == 1&&text1.size()<30) text1 += e.text.text;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
@@ -5304,7 +5305,7 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 				quitGame();
 				break;
 			case SDL_TEXTINPUT:
-				if (activeField == 1) text1 += e.text.text;
+				if (activeField == 1&&text1.size()<30) text1 += e.text.text;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				leftMouseDown = true;
@@ -5321,7 +5322,12 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 					}
 				}
 				if (e.button.x > 370 && e.button.x < 570 && e.button.y > 500 && e.button.y < 566) {
-					quit = true;
+					string tmp = trim(text1);
+					if (!isNumber(tmp)) { alert1Frame = true; alert2Frame = false; }
+					else if (tmp.size() >= 3) { alert2Frame = true; alert1Frame = false; }
+					else {
+						quit = true;
+					}
 				}
 			case SDL_KEYDOWN:
 				if (e.key.keysym.sym == SDLK_BACKSPACE) {
@@ -6178,11 +6184,11 @@ void stackVisualizing() {
 						stackVisualizer.pushStep(val, checkStep);
 					}
 				}
-				else if (e.button.x > 650 && e.button.x < 850 && e.button.y > 460 && e.button.y < 526 && visiblePop) {
+				else if (e.button.x > 650 && e.button.x < 850 && e.button.y > 460 && e.button.y < 526 && visiblePop&&stackVisualizer.listSize>0) {
 					stackVisualizer.popStep(true);
 					visiblePop = false;
 				}
-				else if (e.button.x > 650 && e.button.x < 850 && e.button.y > 550 && e.button.y < 616 && visiblePop) {
+				else if (e.button.x > 650 && e.button.x < 850 && e.button.y > 550 && e.button.y < 616 && visiblePop&&stackVisualizer.listSize>0) {
 					stackVisualizer.popStep(false);
 					visiblePop = false;
 				}
@@ -6307,11 +6313,11 @@ void queueVisualizing() {
 							queueVisualizer.insertEmpty(val, checkStep);
 					}
 				}
-				else if (e.button.x > 650 && e.button.x < 850 && e.button.y > 460 && e.button.y < 526 && visiblePop) {
+				else if (e.button.x > 650 && e.button.x < 850 && e.button.y > 460 && e.button.y < 526 && visiblePop && queueVisualizer.listSize>0) {
 					queueVisualizer.popStep(true);
 					visiblePop = false;
 				}
-				else if (e.button.x > 650 && e.button.x < 850 && e.button.y > 550 && e.button.y < 616 && visiblePop) {
+				else if (e.button.x > 650 && e.button.x < 850 && e.button.y > 550 && e.button.y < 616 && visiblePop&&queueVisualizer.listSize>0) {
 					queueVisualizer.popStep(false);
 					visiblePop = false;
 				}
