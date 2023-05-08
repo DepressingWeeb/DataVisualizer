@@ -1,34 +1,18 @@
 #include "imgui.h"
-
 #include "imgui_impl_sdl2.h"
-
 #include "imgui_impl_sdlrenderer.h"
-
 #include <stdio.h>
-
 #include <SDL.h>
-
 #include <SDL_image.h>
-
 #include <SDL_ttf.h>
-
 #include <string>
-
 #include <time.h>
-
 #include <vector>
-
 #include <utility>
-
 #include <sstream>
-
 #include <fstream>
-
 #include <tuple>
-
 #include <map>
-
-
 #define RED {255,0,0}
 #define BLUE {0,0,255}
 #define GREEN {0,255,0}
@@ -36,7 +20,6 @@
 #define WHITE {255,255,255}
 #define YELLOW {255,255,0}
 using namespace std;
-
 const int SCREEN_WIDTH = 1000;
 const int SCREEN_HEIGHT = 640;
 map<string, string> codeExplainMap = {
@@ -66,26 +49,21 @@ map<string, string> codeExplainMap = {
 	{"head->val = updateValue;","Set the pointer value to the update value"},
 	{"tail->next = newNode;","Set the next pointer of tail to point to the new node"},
 	{"tail = tail->next;","Change the tail pointer to the new node"},
-	//insert elem array
 	{"n++;","Increase the size of array by 1"},
 	{"for(int i = n-1; i > indexInsert; i--){","Check exit loop and decrease i"},
 	{"    arr[i] = arr[i-1];","Set the two current element to be equal"},
 	{"arr[indexInsert] = valueInsert;","Update the insert value at insert index"},
-	//delete elem array
 	{"for(int i = indexDelete; i < n-1; i++){","Check exit loop and increase i by 1"},
 	{"    arr[i] = arr[i+1];","Set the two current element to be equal"},
 	{"n--;","Decrese the size of array by 1"},
-	//search array
 	{"for(int i=0;i<n;i++){","Check exit loop and increase i by 1"},
 	{"    if(arr[i] == target){","Check if the current element value is equal to the target"},
 	{"        targetIndex = i;","Set the returned value to be the current i"},
 	{"        return targetIndex; }","Return the index where the value was founded"},
 	{"    else continue;","Continue to the next iteration"},
 	{"return NOT_FOUND;","If the array doesn't contain the value ,return NOT_FOUND constant (oftentimes will be -1)"},
-	//update array
 	{"arr[indexUpdate] = valueUpdate;","Update the input index to be equal to the value the user input"},
 	{"while (listSize--){","Check exit loop if listSize == 0 and decrease the listSize variable"},
-	//Insert empty LL
 	{"head = new ListNode(value,nullptr);","Create the head of the list"},
 	{"tail->next = head;","Set tail next pointer point to head of the list because current list has only one Node to create the typical cycle"},
 	{"tail = head;","Set tail pointer equal to head because list has only one node"},
@@ -99,10 +77,26 @@ map<string, string> codeExplainMap = {
 	{"DLLNode* toDel = head;","Set the toDel pointer equal to head pointer"},
 	{"if (head)	head->prev = nullptr;","Check the head pointer existence (the list is empty or not). If it is, set its prev to nullptr"},
 	{"head = new DLLNode(value,nullptr,nullptr);","Initiate a new head that has both prev and next pointer set to nullptr"},
-	{"/* Re-layout the list */","Re-layout the current list to fit the purpose of visualization"}
+	{"/* Re-layout the list */","Re-layout the current list to fit the purpose of visualization"},
+	{"int* newArr = new int[n+1];","Allocate the memory for the new array"},
+	{"int* newArr = new int[n-1];","Allocate the memory for the new array"},
+	{"for (int i = 0; i < indexInsert; i++)","Loop from 0 to indexInsert"},
+	{"    newArr[i] = oldArr[i];","Move the element from the old array to the new array"},
+	{"for (int i = 0; i < indexDelete; i++)","Loop from 0 to indexDelete"},
+	{"for (int i = indexDelete + 1; i < n; i++)","Loop from after the index delete to the size of the old array"},
+	{"    newArr[i - 1] = oldArr[i];","Move the element from the old to the new array; this time offset by -1 due to the deleted value"},
+	{"arr[indexInsert] = valueInsert;","Set the index the user input to equal to the value insert"},
+	{"for (int i = indexInsert + 1; i < n + 1; i++)","Loop from after the index insert to the size of the new array"},
+	{"    newArr[i] = oldArr[i - 1];","Move the element from the old to the new array; this time offset by -1 due to the inserted value"},
+	{"delete[] oldArr;","Free the memory allocated for the old array"},
+	{"while(listSize--)","Check exit loop if listSize == 0 and decrease the listSize variable"},
+	{"    stack.pop();","Delete the first node (head) of the stack"},
+	{"    queue.pop();","Delete the first node (head) of the queue"},
+	{"for (int i = 0; i < n; i++)","Loop from start to end of the array"},
+	{"    if (arr[i] == target)","Check if the current element value is equal to the target"},
+	{"        return i;","Return the index at which the value was found"}
 };
 SDL_Rect SCREEN = { 0,0,SCREEN_WIDTH,SCREEN_HEIGHT };
-
 SDL_Window* window = SDL_CreateWindow("Data Visualizer", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
 SDL_Renderer* gRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 TTF_Font* numberFont;
@@ -163,9 +157,7 @@ public:
 		static Theme theme(bgColor, bgElemColor, textColor, elemColor, arrowColor, textSize);
 		return theme;
 	}
-
 };
-//Theme(SDL_Color bgColor, SDL_Color bgElemColor, SDL_Color textColor,SDL_Color elemColor,SDL_Color arrowColor, int textSize)
 Theme theme = Theme::getInstance(WHITE, WHITE, BLACK, BLACK, BLACK, 30);
 void init() {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -185,7 +177,6 @@ SDL_Texture* loadImgTexture(string path) {
 	newTexture = IMG_LoadTexture(gRenderer, path.c_str());
 	return newTexture;
 }
-
 void quitGame() {
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(gRenderer);
@@ -194,7 +185,6 @@ void quitGame() {
 	SDL_Quit();
 	exit(0);
 }
-
 void createButton(SDL_Texture* buttonSpriteSheet, SDL_Rect* button, SDL_Rect* buttonOnHover, bool leftMouseDown, int x, int y, int w, int h, void(*func)(), double degree = -1) {
 	int mouseX, mouseY;
 	SDL_Rect buttonRect;
@@ -210,7 +200,6 @@ void createButton(SDL_Texture* buttonSpriteSheet, SDL_Rect* button, SDL_Rect* bu
 		SDL_RenderCopy(gRenderer, buttonSpriteSheet, button, createRect(&buttonRect, x, y, w, h));
 	}
 }
-
 void createText(TTF_Font* font, SDL_Color color, string text, int x, int y, int w, int h) {
 	SDL_Surface* textSurface = TTF_RenderText_Blended(font, text.c_str(), color);
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(gRenderer, textSurface);
@@ -231,13 +220,11 @@ void highlightCode(TTF_Font* font, SDL_Texture* explain, vector<string> code, in
 	SDL_GetMouseState(&mouseX, &mouseY);
 	SDL_Color oldColor;
 	SDL_GetRenderDrawColor(gRenderer, &oldColor.r, &oldColor.g, &oldColor.b, &oldColor.a);
-
 	SDL_SetRenderDrawColor(gRenderer, color.r, color.g, color.b, color.a);
 	if ((mouseX > startX && mouseX<startX + code[linesColor].size() * 16 && mouseY>startY + linesColor * 50 && mouseY < startY + linesColor * 50 + 40) || !checkStep) {
 		SDL_RenderFillRect(gRenderer, &hightlight);
 		SDL_RenderCopy(gRenderer, explain, &src, &dst);
 		createText(font, BLACK, explanation, dst.x + 52, dst.y + 22, explanation.size() * letterSizeW, 20);
-
 	}
 	SDL_SetRenderDrawColor(gRenderer, oldColor.r, oldColor.g, oldColor.b, oldColor.a);
 }
@@ -253,13 +240,11 @@ string ltrim(const string& s)
 	size_t start = s.find_first_not_of(" \n\r\t\f\v");
 	return (start == std::string::npos) ? "" : s.substr(start);
 }
-
 string rtrim(const string& s)
 {
 	size_t end = s.find_last_not_of(" \n\r\t\f\v");
 	return (end == std::string::npos) ? "" : s.substr(0, end + 1);
 }
-
 string trim(const string& s) {
 	return rtrim(ltrim(s));
 }
@@ -268,10 +253,8 @@ bool isEqualColor(SDL_Color c1, SDL_Color c2) {
 }
 void SDL_RenderDrawCircle(SDL_Renderer* renderer, int32_t x, int32_t y, int32_t radius, SDL_Color color)
 {
-	
 	int offsetx, offsety, d;
 	int status;
-
 	offsetx = 0;
 	offsety = radius;
 	d = radius - 1;
@@ -279,7 +262,6 @@ void SDL_RenderDrawCircle(SDL_Renderer* renderer, int32_t x, int32_t y, int32_t 
 	SDL_Color old;
 	SDL_GetRenderDrawColor(renderer, &old.r, &old.g, &old.b, &old.a);
 	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-
 	while (offsety >= offsetx) {
 		status += SDL_RenderDrawPoint(renderer, x + offsetx, y + offsety);
 		status += SDL_RenderDrawPoint(renderer, x + offsety, y + offsetx);
@@ -289,12 +271,10 @@ void SDL_RenderDrawCircle(SDL_Renderer* renderer, int32_t x, int32_t y, int32_t 
 		status += SDL_RenderDrawPoint(renderer, x + offsety, y - offsetx);
 		status += SDL_RenderDrawPoint(renderer, x - offsetx, y - offsety);
 		status += SDL_RenderDrawPoint(renderer, x - offsety, y - offsetx);
-
 		if (status < 0) {
 			status = -1;
 			break;
 		}
-
 		if (d >= 2 * offsetx) {
 			d -= 2 * offsetx + 1;
 			offsetx += 1;
@@ -310,26 +290,11 @@ void SDL_RenderDrawCircle(SDL_Renderer* renderer, int32_t x, int32_t y, int32_t 
 		}
 	}
 	SDL_SetRenderDrawColor(renderer, old.r, old.g, old.b, old.a);
-	/*ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground;
-	ImVec2 window_pos = { (float)(x-40.0),(float)(y-40.0) };
-	ImGui::SetNextWindowPos(window_pos);
-	ImGui::SetNextWindowSize({ 100,100 });
-	bool p = true;
-	string title = "LLNode" + to_string(x)+to_string(y);
-	ImGui::Begin(title.c_str(), &p, window_flags);
-	ImDrawList* draw_list = ImGui::GetWindowDrawList();
-	ImVec4 colf = { (float)color.r/255.0f,(float)color.g/255.0f,(float)color.b/255.0f,1.0f };
-	ImU32 col = ImColor(colf);
-	draw_list->AddCircle(ImVec2(x,y),25.0f,col,20,2.0f);
-	ImGui::End();*/
-	
-
 }
 void SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius, SDL_Color color)
 {
 	int offsetx, offsety, d;
 	int status;
-
 	offsetx = 0;
 	offsety = radius;
 	d = radius - 1;
@@ -337,9 +302,7 @@ void SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius, SDL_
 	SDL_Color old;
 	SDL_GetRenderDrawColor(renderer, &old.r, &old.g, &old.b, &old.a);
 	SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-
 	while (offsety >= offsetx) {
-
 		status += SDL_RenderDrawLine(renderer, x - offsety, y + offsetx,
 			x + offsety, y + offsetx);
 		status += SDL_RenderDrawLine(renderer, x - offsetx, y + offsety,
@@ -348,12 +311,10 @@ void SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius, SDL_
 			x + offsetx, y - offsety);
 		status += SDL_RenderDrawLine(renderer, x - offsety, y - offsetx,
 			x + offsety, y - offsetx);
-
 		if (status < 0) {
 			status = -1;
 			break;
 		}
-
 		if (d >= 2 * offsetx) {
 			d -= 2 * offsetx + 1;
 			offsetx += 1;
@@ -431,8 +392,6 @@ int highlightNode(bool isStack, int startX, int startY, SDL_Color color, int lis
 			}
 		}
 	}
-
-
 	SDL_SetRenderDrawColor(gRenderer, oldColor.r, oldColor.g, oldColor.b, oldColor.a);
 	return idx;
 }
@@ -454,6 +413,40 @@ int highlightArrElem(int startX, int startY, SDL_Color color, int size) {
 		}
 	}
 	return idx;
+}
+void ImGuiControlStep(int& step, int maxStep, bool checkStep, int& speed, int& t, bool& quit, bool& stop) {
+	const string stepString = to_string(step) + "/" + to_string(maxStep);
+	int speedRaw = speed + 1;
+	ImGui::SetNextWindowSize({ 300,150 }, ImGuiCond_FirstUseEver);
+	ImGui::Begin("Control");
+	ImGui::Text("Current step :    ");
+	ImGui::SameLine();
+	ImGui::Text(stepString.c_str());
+	ImGui::ProgressBar((float)step / (float)maxStep);
+	if (!checkStep) {
+		ImGui::SliderInt("Speed", &speedRaw, 1, 4);
+		if (ImGui::Button("Run from beginning")) step = 0;
+		ImGui::SameLine();
+		if (ImGui::Button("Stop")) stop=true;
+		ImGui::SameLine();
+		if (ImGui::Button("Run ")) stop=false;
+		ImGui::SameLine();
+		if (ImGui::Button("End ")) quit = true;
+		if (stop) {
+			if (ImGui::Button("Previous Step")) step = max(step - 1, 0);
+			ImGui::SameLine();
+			if (ImGui::Button("  Next Step  ")) step = min(step + 1, maxStep);
+		}
+	}
+	else {
+		if (ImGui::Button("Previous Step")) step = max(step - 1, 0);
+		ImGui::SameLine();
+		if (ImGui::Button("  Next Step  ")) step = min(step + 1, maxStep);
+		ImGui::SameLine();
+		if (ImGui::Button("End ")) quit = true;
+	}
+	ImGui::End();
+	speed = speedRaw - 1;
 }
 class ArrayElement {
 public:
@@ -481,8 +474,6 @@ public:
 		this->val = val;
 		this->index = index;
 	}
-	//~ArrayElement() { TTF_CloseFont(numberFont); }
-
 	void display() {
 		SDL_Color old;
 		SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
@@ -508,414 +499,528 @@ public:
 		this->w = w;
 		this->h = h;
 	}
-
 };
-
-class ArrayVisualizer {
+class StaticArrayVisualizer {
 private:
 	SDL_Color bgColor;
 public:
-	int n;
-	ArrayElement arr[100];
-	ArrayElement tempArr[100];
-	int stepInsert;
-	int stepDelete;
-	int stepSearch;
-	int stepUpdate;
-	int delay;
-	int maxStep;
-	int speed;
-	vector<string> code = {};
-	int linesDisplay = -1;
-	SDL_Rect buttonPosArray[4][2];
-	TTF_Font* numberFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 92);
-	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
-	SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
-	ArrayVisualizer() {
-		n = 0;
-		stepInsert = -1;
-		stepDelete = -1;
-		stepSearch = -1;
-		stepUpdate = -1;
-		delay = -1;
-		maxStep = 1000;
-		speed = 0;
+	ArrayElement arr[30];
+	int size;
+	StaticArrayVisualizer() {
+		size = 0;
 		bgColor = theme.getBgColor();
-		for (int i = 0; i < 100; i++) arr[i] = ArrayElement();
+	}
+	void visualize() {
+		for (int i = 0; i < size; i++) {
+			arr[i].display();
+		}
+	}
+	void visualize(ArrayElement* arr, int size) {
+		for (int i = 0; i < size; i++) {
+			arr[i].display();
+		}
+	}
+	void initialize(vector<string> list) {
+		this->size = min((int)list.size(),30);
+		if (list.size() == 0) return;
+		for (int i = 0; i < size; i++) {
+			arr[i] = ArrayElement(100 + i * 50, 100, 50, 50, theme.getElemColor(), theme.getBgElemColor(), theme.getTextColor(), theme.getTextSize(), list[i], to_string(i));
+		}
+	}
+	void reCalcCoordinate() {
+		for (int i = 0; i < size; i++) {
+			arr[i].changeCoordinate(100 + i * 50, 100, 50, 50);
+		}
+	}
+	void resetColor() {
+		for (int i = 0; i < size; i++) {
+			arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
+		}
+	}
+	void resetColor(ArrayElement* arr, int size) {
+		for (int i = 0; i < size; i++) {
+			arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
+		}
+	}
+	void setArrayInsert(ArrayElement* arr, ArrayElement* clone, int idx, string val, int lim) {
+		for (int i = 0; i < size; i++) {
+			clone[i] = arr[i];
+		}
+		clone[size].val = "0";
+		for (int i = 0; i < lim; i++) {
+			if (size - i == idx) {
+				clone[idx].val = val;
+				break;
+			}
+			clone[size-i].val = clone[size-i-1].val;
+		}
+	}
+	void insertStep(int idx, string val, bool checkStep) {
+		if (size == 30) return;
+		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
+		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 92);
+		vector<string> code = {
+			"n++;",
+			"for(int i = n-1; i > indexInsert; i--){",
+			"    arr[i] = arr[i-1];",
+			"}",
+			"arr[indexInsert] = valueInsert;"
+		};
+		int linesColor = -1;
+		int totalSteps = (size - idx ) * 2 + 3;
 		SDL_Rect rect;
+		SDL_Rect endButton = *createRect(&rect, 1413, 165, 100, 50);
+		SDL_Rect endButtonHover = *createRect(&rect, 1683, 165, 100, 50);
+		int speed = 0;
+		int t = 60 / (speed + 1);
+		SDL_Rect buttonPosArray[4][2];
 		for (int i = 0; i < 4; i++) {
 			buttonPosArray[i][0] = *createRect(&rect, 1413 + 180 * i, 870, 130, 130);
 			buttonPosArray[i][1] = *createRect(&rect, 1413 + 180 * i, 1149, 130, 130);
 		}
-	}
-	~ArrayVisualizer() {
-		SDL_DestroyTexture(buttonSpriteSheet);
-		SDL_DestroyTexture(explain);
-		TTF_CloseFont(numberFont);
-	}
-	void resetStep() {
-		for (int i = 0; i < 100; i++) {
-			if (arr[i].val == "N") break;
-			arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
-		}
-		code = {};
-		linesDisplay = -1;
-		stepInsert = -1;
-		stepDelete = -1;
-		stepSearch = -1;
-		stepUpdate = -1;
-		maxStep = 1000;
-	}
-	bool checkStepEqualZero() {
-		return stepInsert == 0 || stepDelete == 0 || stepSearch == 0 || stepUpdate == 0;
-	}
-	bool checkAnyStep() {
-		return stepInsert >= 0 || stepDelete >= 0 || stepSearch >= 0 || stepUpdate >= 0;
-	}
-	void visualize() {
-		if (!checkStepEqualZero()) {
-			for (int i = 0; i < 100; i++) {
-				if (arr[i].val == "N") break;
-				arr[i].display();
-			}
-		}
-		else {
-			for (int i = 0; i < 100; i++) {
-				if (tempArr[i].val == "N") break;
-				tempArr[i].display();
-			}
-		}
-		if (!checkStepEqualZero())	highlightCode(numberFont, explain, code, linesDisplay, 100, 200, YELLOW, true);
-		if (checkStepEqualZero()) return;
-		for (int i = 0; i < code.size(); i++) {
-			if (i == linesDisplay)
-				createText(numberFont, RED, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
-			else
-				createText(numberFont, BLACK, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
-		}
-	}
-	void visualize(ArrayElement customArr[], int size) {
-		for (int i = 0; i < size; i++) {
-			customArr[i].display();
-		}
-		for (int i = 0; i < code.size(); i++) {
-			if (i == linesDisplay)
-				createText(numberFont, RED, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
-			else
-				createText(numberFont, BLACK, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
-		}
-	}
-	void updateFrame(vector<string> code = {}, int linesColor = -1) {
-		int t = 60 / (speed + 1);
-		SDL_Rect rect;
-		bool leftMouseDown = false;
 		SDL_Event e;
-		while (t--) {
+		bool quit = false;
+		bool stop = false;
+		int currStep = checkStep ? 0 : 1;
+		int framesCount = 1;
+		string oldVal = arr[idx].val;
+		ArrayElement clone[30];
+		for (int i = 0; i < size+1; i++) {
+			clone[i] = arr[i];
+		}
+		clone[size]= ArrayElement(100 + size * 50, 100, 50, 50, YELLOW, theme.getBgElemColor(), YELLOW, theme.getTextSize(), "0", to_string(size));
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
-			visualize();
-			createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], leftMouseDown, 900, 400, 50, 50, nullptr);
-			highlightCode(numberFont, explain, code, linesColor, 100, 200, YELLOW, false);
+			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
+			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
+			t = 60 / (speed + 1);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
+			if (currStep == 0) {
+				linesColor = -1;
+				resetColor(clone, size+1);
+				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				visualize();
+			}
+			else if (currStep == 1) {
+				linesColor = 0;
+				resetColor(clone, size + 1);
+				setArrayInsert(arr, clone, idx, val, currStep / 2);
+				visualize(clone, size + 1);
+			}
+			else if (currStep <totalSteps) {
+				resetColor(clone, size+1);
+				if (currStep % 2 == 0) {
+					linesColor = 1;
+					setArrayInsert(arr, clone, idx,val, (currStep-1) / 2);
+					visualize(clone, size+1);
+				}
+				else {
+					linesColor = 2;
+					setArrayInsert(arr, clone, idx,val, (currStep-1) / 2);
+					clone[size + 1 - (currStep - 1) / 2].changeColor(GREEN);
+					clone[size - (currStep - 1) / 2].changeColor(GREEN);
+					visualize(clone, size+1);
+				}
+			}
+			else {
+				resetColor(clone, size+1);
+				linesColor = 4;
+				setArrayInsert(arr, clone, idx, val, (currStep - 1) / 2);
+				clone[idx].changeColor(GREEN);
+				visualize(clone, size +1);
+			}
+			highlightCode(generalFont, explain, code, linesColor, 100, 200, YELLOW, checkStep);
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
-						createText(numberFont, RED, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
+						createText(generalFont, RED, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
 					else
-						createText(numberFont, BLACK, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
+						createText(generalFont, BLACK, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
 				}
 			}
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
+					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
-					leftMouseDown = true;
-					if (e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
+					if (ImGui::GetIO().WantCaptureMouse) break;
+					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
+					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
+				case SDL_KEYDOWN:
+					if (checkStep) {
+						switch (e.key.keysym.sym)
+						{
+						case SDLK_LEFT: currStep = max(currStep - 1, 0); break;
+						case SDLK_RIGHT: currStep = min(currStep + 1, totalSteps); break;
+						}
+					}
 				}
 			}
-
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
+			framesCount++;
 		}
+		setArrayInsert(arr, clone, idx,val, size - idx+1);
+		for (int i = 0; i < size +1; i++) {
+			arr[i] = clone[i];
+		}
+		size++;
+		resetColor();
+		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
+		TTF_CloseFont(generalFont);
+		return;
 	}
-	bool keyboardEvent(int idx, string val) {
-		bool checkSame = false;
-		const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
+	int search(string val) {
+		for (int i = 0; i < size; i++) {
+			if (arr[i].val == val) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	void searchStep(string val, bool checkStep) {
+		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
+		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 92);
+		vector<string> code = { "for (int i = 0; i < n; i++)",
+							 "    if (arr[i] == target)",
+							 "        return i;",
+							 "return NOT_FOUND;" };
+		int linesColor = -1;
+		int ans = search(val);
+		int totalSteps = ans == -1 ? size * 2 + 2 : ans * 2 + 3;
+		SDL_Rect rect;
+		SDL_Rect endButton = *createRect(&rect, 1413, 165, 100, 50);
+		SDL_Rect endButtonHover = *createRect(&rect, 1683, 165, 100, 50);
+		int speed = 0;
+		int t = 60 / (speed + 1);
+		SDL_Rect buttonPosArray[4][2];
+		for (int i = 0; i < 4; i++) {
+			buttonPosArray[i][0] = *createRect(&rect, 1413 + 180 * i, 870, 130, 130);
+			buttonPosArray[i][1] = *createRect(&rect, 1413 + 180 * i, 1149, 130, 130);
+		}
 		SDL_Event e;
-		if (SDL_PollEvent(&e)) {
-			if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_LEFT) {
-				if (stepInsert >= 0) {
-					stepInsert = max(stepInsert - 1, 0);
-					if (stepInsert > 0) {
-						insertStep(idx, val, stepInsert, n - 1);
-					}
-				}
-				else if (stepDelete >= 0) {
-					stepDelete = max(stepDelete - 1, 0);
-					if (stepDelete > 0) {
-						delIndexStep(idx, stepDelete, n + 1);
-					}
-				}
-				else if (stepSearch >= 0) {
-					stepSearch = max(stepSearch - 1, 0);
-					if (stepSearch > 0) {
-						searchStep(val, stepSearch, n);
-					}
-				}
-				else if (stepUpdate >= 0) {
-					stepUpdate = max(stepUpdate - 1, 0);
-					if (stepUpdate > 0) {
-						updateStep(idx, val, stepUpdate, n);
-					}
-				}
-
-				return true;
+		bool quit = false;
+		bool stop = false;
+		int currStep = checkStep ? 0 : 1;
+		int framesCount = 1;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+		while (!quit) {
+			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
+			SDL_RenderFillRect(gRenderer, &SCREEN);
+			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
+			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
+			t = 60 / (speed + 1);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
+			if (currStep == 0) {
+				linesColor = -1;
+				resetColor();
+				if (checkStep)createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				visualize();
 			}
-			else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RIGHT) {
-				if (stepInsert >= 0) {
-					stepInsert = min(stepInsert + 1, maxStep);
-					insertStep(idx, val, stepInsert, n - 1);
+			else if (currStep != totalSteps) {
+				resetColor();
+				if (currStep % 2 == 1) {
+					linesColor = 0;
 				}
-				else if (stepDelete >= 0) {
-					stepDelete = min(stepDelete + 1, maxStep);
-					delIndexStep(idx, stepDelete, n + 1);
+				else {
+					linesColor = 1;
+					if (arr[(currStep - 2) / 2].val == val)
+						arr[(currStep - 2) / 2].changeColor(GREEN);
+					else
+						arr[(currStep - 2) / 2].changeColor(RED);
 				}
-				else if (stepSearch >= 0) {
-					stepSearch = min(stepSearch + 1, maxStep);
-					searchStep(val, stepSearch, n);
-				}
-				else if (stepUpdate >= 0) {
-					stepUpdate = min(stepUpdate + 1, maxStep);
-					updateStep(idx, val, stepUpdate, n);
-				}
-				return true;
+				visualize();
 			}
+			else {
+				if (ans == -1)
+					linesColor = 3;
+				else
+					linesColor = 2;
+				visualize();
+			}
+			highlightCode(generalFont, explain, code, linesColor, 100, 200, YELLOW, checkStep);
+			if (linesColor != -1) {
+				for (int i = 0; i < code.size(); i++) {
+					if (i == linesColor)
+						createText(generalFont, RED, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
+					else
+						createText(generalFont, BLACK, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
+				}
+			}
+			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
+				switch (e.type) {
+				case SDL_QUIT:
+					quit = true;
+					quitGame();
+					break;
+				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
+					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
+					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
+				case SDL_KEYDOWN:
+					if (checkStep) {
+						switch (e.key.keysym.sym)
+						{
+						case SDLK_LEFT: currStep = max(currStep - 1, 0); break;
+						case SDLK_RIGHT: currStep = min(currStep + 1, totalSteps); break;
+						}
+					}
+				}
+			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+			SDL_RenderPresent(gRenderer);
+			framesCount++;
 		}
-		return false;
+		resetColor();
+		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
+		TTF_CloseFont(generalFont);
+		return;
 	}
-	void initialize(vector<string> strArr) {
-		this->n = strArr.size();
-		for (int i = 0; i < 100; i++) {
-			arr[i] = ArrayElement();
-		}
-		for (int i = 0; i < n; i++) {
-			arr[i] = ArrayElement(100 + i * 50, 100, 50, 50, theme.getElemColor(), theme.getBgElemColor(),theme.getTextColor(),theme.getTextSize(), strArr[i], to_string(i));
-		}
-
+	void update(int idx, string newVal) {
+		arr[idx].val = newVal;
 	}
-	void insertStep(int idx, string val, int step, int n) {
-		for (int i = 0; i < 100; i++) arr[i] = tempArr[i];
-		int currStep = 0;
-		if (step == 0) return;
-		vector<string> codeInsert = {
-			"n++;",
-			"for(int i = n-1; i > indexInsert; i--){",
-			"    arr[i] = arr[i-1];",
-			"}",
-			"arr[indexInsert] = valueInsert;"
-		};
-		n++;
-		arr[n - 1] = ArrayElement(100 + (n - 1) * 50, 100, 50, 50, YELLOW, theme.getBgElemColor(), YELLOW,theme.getTextSize(), "0", to_string(n - 1));
-		currStep++;
-		if (currStep == step) { linesDisplay = 0; code = codeInsert; return; }
-
-		for (int i = n - 1; i > idx; i--) {
-			currStep++;
-			if (currStep == step) { linesDisplay = 1; code = codeInsert; return; }
-			arr[i + 1].changeColor(theme.getElemColor(), theme.getTextColor());
-			arr[i].val = arr[i - 1].val;
-			arr[i].changeColor(RED);
-			arr[i - 1].changeColor(BLUE);
-			currStep++;
-			if (currStep == step) { linesDisplay = 2; code = codeInsert; return; }
+	void setArrayDelete(ArrayElement* arr, ArrayElement* clone, int idx, int lim) {
+		for (int i = 0; i < size; i++) {
+			clone[i] = arr[i];
 		}
-		currStep++;
-		if (currStep == step) { linesDisplay = 1; code = codeInsert; return; }
-		arr[idx + 1].changeColor(theme.getElemColor(), theme.getTextColor());
-		arr[idx].val = val;
-		currStep++;
-		linesDisplay = 4; code = codeInsert; maxStep = currStep; return;
-
-	}
-	void insert(int idx, string val) {
-		vector<string> codeInsert = {
-			"n++;",
-			"for(int i = n-1; i > indexInsert; i--){",
-			"    arr[i] = arr[i-1];",
-			"}",
-			"arr[indexInsert] = valueInsert;"
-		};
-
-		n++;
-		arr[n - 1] = ArrayElement(100 + (n - 1) * 50, 100, 50, 50, YELLOW, theme.getBgElemColor(), YELLOW,theme.getTextSize(), "0", to_string(n - 1));
-		updateFrame(codeInsert, 0);
-
-		for (int i = n - 1; i > idx; i--) {
-			updateFrame(codeInsert, 1);
-			arr[i + 1].changeColor(theme.getElemColor(), theme.getTextColor());
-			arr[i].val = arr[i - 1].val;
-			arr[i].changeColor(RED);
-			arr[i - 1].changeColor(BLUE);
-			updateFrame(codeInsert, 2);
+		for (int i = 0; i < lim; i++) {
+			clone[i + idx].val = clone[i + idx + 1].val;
 		}
-		updateFrame(codeInsert, 1);
-		arr[idx + 1].changeColor(theme.getElemColor(), theme.getTextColor());;
-		arr[idx].val = val;
-		updateFrame(codeInsert, 4);
-		arr[idx].changeColor(theme.getElemColor(), theme.getTextColor());;
-		updateFrame(codeInsert, 4);
 	}
-	void insertNoVisual(int idx, string val) {
-		arr[n - 1] = ArrayElement(100 + (n - 1) * 50, 100, 50, 50, YELLOW, theme.getBgElemColor(), YELLOW,theme.getTextSize(), "0", to_string(n - 1));
-		for (int i = n - 1; i > idx; i--) {
-			arr[i].val = arr[i - 1].val;
-		}
-		arr[idx].val = val;
-	}
-
-	void delIndexStep(int idx, int step, int n) {
-		for (int i = 0; i < 100; i++) arr[i] = tempArr[i];
-		int currStep = 0;
-		if (step == 0) return;
-		vector<string> codeDelete = {
+	void deleteStep(int idx, bool checkStep) {
+		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
+		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 92);
+		vector<string> code = {
 			"for(int i = indexDelete; i < n-1; i++){",
 			"    arr[i] = arr[i+1];",
 			"}",
 			"n--;"
 		};
-		for (int i = idx; i < n - 1; i++) {
-			currStep++;
-			if (currStep == step) { linesDisplay = 0; code = codeDelete; return; }
-			if (i != idx) arr[i - 1].changeColor(theme.getElemColor(), theme.getTextColor());
-			arr[i].changeColor(GREEN);
-			arr[i + 1].changeColor(RED);
-			arr[i].val = arr[i + 1].val;
-			currStep++;
-			if (currStep == step) { linesDisplay = 1; code = codeDelete; return; }
+		int linesColor = -1;
+		int totalSteps = (size - idx - 1) * 2 + 2;
+		SDL_Rect rect;
+		SDL_Rect endButton = *createRect(&rect, 1413, 165, 100, 50);
+		SDL_Rect endButtonHover = *createRect(&rect, 1683, 165, 100, 50);
+		int speed = 0;
+		int t = 60 / (speed + 1);
+		SDL_Rect buttonPosArray[4][2];
+		for (int i = 0; i < 4; i++) {
+			buttonPosArray[i][0] = *createRect(&rect, 1413 + 180 * i, 870, 130, 130);
+			buttonPosArray[i][1] = *createRect(&rect, 1413 + 180 * i, 1149, 130, 130);
 		}
-		currStep++;
-		if (currStep == step) { linesDisplay = 0; code = codeDelete; return; }
-		arr[n - 1] = ArrayElement();
-
-		n--;
-		arr[n - 1].changeColor(theme.getElemColor(), theme.getTextColor());
-		currStep++;
-		linesDisplay = 3; code = codeDelete; maxStep = currStep; return;
-
-	}
-	void delIndex(int idx) {
-		vector<string> codeDelete = { "for(int i = indexDelete; i < n-1; i++){", "    arr[i] = arr[i+1];","}","n--;" };
-		for (int i = idx; i < n - 1; i++) {
-			updateFrame(codeDelete, 0);
-			if (i != idx) arr[i - 1].changeColor(theme.getElemColor(), theme.getTextColor());
-			arr[i].changeColor(GREEN);
-			arr[i + 1].changeColor(RED);
-			arr[i].val = arr[i + 1].val;
-			updateFrame(codeDelete, 1);
+		SDL_Event e;
+		bool quit = false;
+		bool stop = false;
+		int currStep = checkStep ? 0 : 1;
+		int framesCount = 1;
+		string oldVal = arr[idx].val;
+		ArrayElement clone[30];
+		for (int i = 0; i < size; i++) {
+			clone[i] = arr[i];
 		}
-		updateFrame(codeDelete, 0);
-		arr[n - 1] = ArrayElement();
-
-		n--;
-		updateFrame(codeDelete, 3);
-		arr[n - 1].changeColor(theme.getElemColor(), theme.getTextColor());
-
-
-	}
-	void delNoVisual(int idx) {
-		n++;
-		for (int i = idx; i < n - 1; i++) {
-			arr[i].val = arr[i + 1].val;
-		}
-		arr[n - 1] = ArrayElement();
-
-		n--;
-		arr[n - 1].changeColor(theme.getElemColor(), theme.getTextColor());
-	}
-	void searchStep(string val, int step, int n) {
-		for (int i = 0; i < 100; i++) arr[i] = tempArr[i];
-		int currStep = 0;
-		if (step == 0) return;
-		vector<string> codeSearch = {
-			"for(int i=0;i<n;i++){",
-			"    if(arr[i] == target){",
-			"        targetIndex = i;",
-			"        return targetIndex; }",
-			"    else continue;",
-			"}",
-			"return NOT_FOUND;"
-		};
-		for (int i = 0; i < n; i++) {
-			currStep++;
-			if (currStep == step) { linesDisplay = 0; code = codeSearch; return; }
-			currStep++;
-			if (currStep == step) { linesDisplay = 1; code = codeSearch; return; }
-			if (arr[i].val == val) {
-				arr[i].changeColor(GREEN);
-				currStep++;
-				if (currStep == step) { linesDisplay = 2; code = codeSearch; return; }
-				arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
-				currStep++;
-				if (currStep == step) { linesDisplay = 3; code = codeSearch; maxStep = currStep; return; }
-				return;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+		while (!quit) {
+			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
+			SDL_RenderFillRect(gRenderer, &SCREEN);
+			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
+			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
+			t = 60 / (speed + 1);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
+			if (currStep == 0) {
+				linesColor = -1;
+				resetColor(clone,size);
+				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				visualize();
 			}
-			else arr[i].changeColor(RED);
-			currStep++;
-			if (currStep == step) { linesDisplay = 4; code = codeSearch; return; }
-			arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
-		}
-		currStep++;
-		if (currStep == step) {
-			linesDisplay = 0; code = codeSearch; return;
-		}
-		currStep++;
-		if (currStep == step) {
-			linesDisplay = 6; code = codeSearch; maxStep = currStep; return;
-		}
-
-	}
-	void search(string val) {
-		vector<string> codeSearch = { "for(int i=0;i<n;i++){", "    if(arr[i] == target){","        targetIndex = i;","        break; }","    else continue;","}" };
-		for (int i = 0; i < n; i++) {
-			updateFrame(codeSearch, 0);
-			updateFrame(codeSearch, 1);
-			if (arr[i].val == val) {
-				
-				arr[i].changeColor(GREEN);
-				updateFrame(codeSearch, 2);
-				arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
-				updateFrame(codeSearch, 3);
-				return;
+			else if (currStep != totalSteps) {
+				resetColor(clone,size);
+				if (currStep % 2 == 1) {
+					linesColor = 0;
+					setArrayDelete(arr, clone, idx, currStep / 2);
+					visualize(clone, size);
+				}
+				else {
+					linesColor = 1;
+					setArrayDelete(arr, clone, idx, currStep / 2);
+					clone[idx + currStep / 2 - 1].changeColor(GREEN);
+					clone[idx + currStep / 2].changeColor(GREEN);
+					visualize(clone, size);
+				}
 			}
-			else arr[i].changeColor(RED);
-			updateFrame(codeSearch, 4);
-			arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
+			else {
+				resetColor(clone,size);
+				linesColor = 3;
+				visualize(clone, size - 1);
+			}
+			highlightCode(generalFont, explain, code, linesColor, 100, 200, YELLOW, checkStep);
+			if (linesColor != -1) {
+				for (int i = 0; i < code.size(); i++) {
+					if (i == linesColor)
+						createText(generalFont, RED, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
+					else
+						createText(generalFont, BLACK, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
+				}
+			}
+			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
+				switch (e.type) {
+				case SDL_QUIT:
+					quit = true;
+					quitGame();
+					break;
+				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
+					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
+					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
+				case SDL_KEYDOWN:
+					if (checkStep) {
+						switch (e.key.keysym.sym)
+						{
+						case SDLK_LEFT: currStep = max(currStep - 1, 0); break;
+						case SDLK_RIGHT: currStep = min(currStep + 1, totalSteps); break;
+						}
+					}
+				}
+			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+			SDL_RenderPresent(gRenderer);
+			framesCount++;
 		}
-		updateFrame(codeSearch, 0);
-		updateFrame(codeSearch, 6);
-
+		setArrayDelete(arr, clone, idx, size - idx - 1);
+		for (int i = 0; i < size - 1; i++) {
+			arr[i] = clone[i];
+		}
+		size--;
+		resetColor();
+		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
+		TTF_CloseFont(generalFont);
+		return;
 	}
-	void updateStep(int idx, string val, int step, int n) {
-		for (int i = 0; i < 100; i++) arr[i] = tempArr[i];
-		int currStep = 0;
-		if (step == 0) return;
-		vector<string> codeUpdate = { "arr[indexUpdate] = valueUpdate;" };
+	void updateStep(int idx, string val, bool checkStep) {
+		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
+		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
+		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 92);
+		vector<string> code = { "arr[indexUpdate] = valueUpdate;" };
+		int linesColor = -1;
+		int totalSteps = 1;
+		SDL_Rect rect;
+		SDL_Rect endButton = *createRect(&rect, 1413, 165, 100, 50);
+		SDL_Rect endButtonHover = *createRect(&rect, 1683, 165, 100, 50);
+		int speed = 0;
+		int t = 60 / (speed + 1);
+		SDL_Rect buttonPosArray[4][2];
+		for (int i = 0; i < 4; i++) {
+			buttonPosArray[i][0] = *createRect(&rect, 1413 + 180 * i, 870, 130, 130);
+			buttonPosArray[i][1] = *createRect(&rect, 1413 + 180 * i, 1149, 130, 130);
+		}
+		SDL_Event e;
+		bool quit = false;
+		bool stop = false;
+		int currStep = checkStep ? 0 : 1;
+		int framesCount = 1;
+		string oldVal = arr[idx].val;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+		while (!quit) {
+			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
+			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
+			SDL_RenderFillRect(gRenderer, &SCREEN);
+			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
+			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
+			t = 60 / (speed + 1);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
+			if (currStep == 0) {
+				linesColor = -1;
+				resetColor();
+				arr[idx].val = oldVal;
+				if (checkStep)createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				visualize();
+			}
+			else {
+				resetColor();
+				linesColor = 0;
+				arr[idx].changeColor(GREEN);
+				arr[idx].val = val;
+				visualize();
+			}
+			highlightCode(generalFont, explain, code, linesColor, 100, 200, YELLOW, checkStep);
+			if (linesColor != -1) {
+				for (int i = 0; i < code.size(); i++) {
+					if (i == linesColor)
+						createText(generalFont, RED, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
+					else
+						createText(generalFont, BLACK, code[i], 100, 200 + i * 50, code[i].size() * 16, 40);
+				}
+			}
+			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
+				switch (e.type) {
+				case SDL_QUIT:
+					quit = true;
+					quitGame();
+					break;
+				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
+					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
+					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
+				case SDL_KEYDOWN:
+					if (checkStep) {
+						switch (e.key.keysym.sym)
+						{
+						case SDLK_LEFT: currStep = max(currStep - 1, 0); break;
+						case SDLK_RIGHT: currStep = min(currStep + 1, totalSteps); break;
+						}
+					}
+				}
+			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+			SDL_RenderPresent(gRenderer);
+			framesCount++;
+		}
 		arr[idx].val = val;
-		arr[idx].changeColor(GREEN);
-		currStep++;
-		if (currStep == step) { linesDisplay = 0; code = codeUpdate; return; }
-		arr[idx].changeColor(theme.getElemColor(), theme.getTextColor());
-		code = codeUpdate;
-		linesDisplay = -1;
-		maxStep = 2;
-	}
-	void update(int idx, string val) {
-		vector<string> codeUpdate = { "arr[indexUpdate] = valueUpdate;" };
-		arr[idx].val = val;
-		arr[idx].changeColor(GREEN);
-		updateFrame(codeUpdate, 0);
-		arr[idx].changeColor(theme.getElemColor(), theme.getTextColor());
+		resetColor();
+		SDL_DestroyTexture(buttonSpriteSheet);
+		SDL_DestroyTexture(explain);
+		TTF_CloseFont(generalFont);
+		return;
 	}
 };
 class DynamicArrayVisualizer {
@@ -932,7 +1037,6 @@ public:
 	void freeMem() {
 		delete[] arr;
 		size = 0;
-
 	}
 	void visualize() {
 		for (int i = 0; i < size;i++) {
@@ -963,7 +1067,7 @@ public:
 			arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
 		}
 	}
-	void resetColor(ArrayElement* arr) {
+	void resetColor(ArrayElement* arr,int size) {
 		for (int i = 0; i < size; i++) {
 			arr[i].changeColor(theme.getElemColor(), theme.getTextColor());
 		}
@@ -1012,34 +1116,40 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		ArrayElement* newArr = new ArrayElement[size + 1];
 		for (int i = 0; i < size+1; i++) {
 			newArr[i] = ArrayElement(100 + i * 50, 100, 50, 50, theme.getElemColor(), theme.getBgElemColor(), theme.getTextColor(), theme.getTextSize(),"0", to_string(i));
 		}
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
-			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit,stop);
+			if (framesCount % t == 0 && !checkStep&& !stop) currStep = min(currStep + 1, totalSteps);
 			if (currStep == 0) {
 				linesColor = -1;
-				resetColor(newArr);
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				resetColor(newArr,size+1);
+				if (checkStep)createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if(currStep==1) {
 				setArrayInsert(newArr, arr, idx, val, 0);
 				linesColor = 0;
-				resetColor(newArr);
+				resetColor(newArr,size+1);
 			}
 			else if (currStep <= 1 + idx * 2 + 1) {
-				resetColor(newArr);
+				resetColor(newArr,size+1);
 				if (currStep % 2 == 0) {
 					linesColor = 1;
 					setArrayInsert(newArr, arr, idx, val, (currStep - 1) / 2);
@@ -1047,18 +1157,16 @@ public:
 				else {
 					linesColor = 2;
 					setArrayInsert(newArr, arr, idx, val, (currStep - 1) / 2);
-
 				}
-
 			}
 			else if (currStep == 2 + idx * 2 + 1) {
-				resetColor(newArr);
+				resetColor(newArr,size+1);
 				linesColor = 3;
 				setArrayInsert(newArr, arr, idx, val, (currStep - 1) / 2);
 				newArr[idx].changeColor(GREEN);
 			}
 			else if (currStep != totalSteps) {
-				resetColor(newArr);
+				resetColor(newArr,size+1);
 				if (currStep % 2 == 0) {
 					linesColor = 4;
 					setArrayInsert(newArr, arr, idx, val, (currStep - 1) / 2);
@@ -1069,7 +1177,7 @@ public:
 				}
 			}
 			else {
-				resetColor(newArr);
+				resetColor(newArr,size+1);
 				linesColor = 6;
 				setArrayInsert(newArr, arr, idx, val, size+1);
 			}
@@ -1084,12 +1192,14 @@ public:
 				}
 			}
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -1102,6 +1212,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -1131,7 +1243,7 @@ public:
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
 		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
 		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 92);
-		vector<string> code = { "for (int i = 0; i < size; i++) ",
+		vector<string> code = { "for (int i = 0; i < n; i++)",
 							 "    if (arr[i] == target)",
 							 "        return i;",
 							 "return NOT_FOUND;" };
@@ -1150,28 +1262,33 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
-			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep&&!stop) currStep = min(currStep + 1, totalSteps);
 			if (currStep == 0) {
 				linesColor = -1;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				if (checkStep)createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep!=totalSteps) {
 				resetColor();
 				if (currStep % 2 == 1) {
 					linesColor = 0;
-
 				}
 				else {
 					linesColor = 1;
@@ -1179,9 +1296,7 @@ public:
 						arr[(currStep-2) / 2].changeColor(GREEN);
 					else
 						arr[(currStep-2) / 2].changeColor(RED);
-
 				}
-
 				visualize();
 			}
 			else {
@@ -1201,12 +1316,14 @@ public:
 				}
 			}
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -1219,6 +1336,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -1231,26 +1350,34 @@ public:
 	void update(int idx, string newVal) {
 		arr[idx].val = newVal;
 	}
-	void setArrayDelete(ArrayElement* arr,ArrayElement* clone, int idx, int lim) {
-		for (int i = 0; i < size; i++) {
-			clone[i] = arr[i];
-		}
+	void setArrayDelete(ArrayElement* newArr,ArrayElement* oldArr, int idx, int lim) {
 		for (int i = 0; i < lim; i++) {
-			clone[i + idx].val = clone[i + idx + 1].val;
+			if (i < idx) {
+				newArr[i].val = oldArr[i].val;
+			}
+			else {
+				newArr[i].val = oldArr[i+1].val;
+			}
 		}
+		for (int i = lim; i < size -1; i++) {
+			newArr[i] = ArrayElement(100 + i * 50, 100, 50, 50, theme.getElemColor(), theme.getBgElemColor(), theme.getTextColor(), theme.getTextSize(), "0", to_string(i));
+		}
+		return;
 	}
 	void deleteStep(int idx, bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
 		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
 		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 92);
-		vector<string> code = { 
-			"for(int i = indexDelete; i < n-1; i++){",
-			"    arr[i] = arr[i+1];",
-			"}",
-			"n--;"
+		vector<string> code = {
+			"int* newArr = new int[n-1];",
+			"for (int i = 0; i < indexDelete; i++)",
+			"    newArr[i] = oldArr[i];",
+			"for (int i = indexDelete + 1; i < n; i++)",
+			"    newArr[i - 1] = oldArr[i];",
+			"delete[] oldArr;"
 		};
 		int linesColor = -1;
-		int totalSteps = (size-idx-1)*2+2;
+		int totalSteps = (size-1) * 2 + 4;
 		SDL_Rect rect;
 		SDL_Rect endButton = *createRect(&rect, 1413, 165, 100, 50);
 		SDL_Rect endButtonHover = *createRect(&rect, 1683, 165, 100, 50);
@@ -1263,46 +1390,66 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
-		string oldVal = arr[idx].val;
-		ArrayElement* clone = new ArrayElement[size];
-		for (int i = 0; i < size; i++) {
-			clone[i] = arr[i];
+		ArrayElement* newArr = new ArrayElement[size - 1];
+		for (int i = 0; i < size - 1; i++) {
+			newArr[i] = ArrayElement(100 + i * 50, 100, 50, 50, theme.getElemColor(), theme.getBgElemColor(), theme.getTextColor(), theme.getTextSize(), "0", to_string(i));
 		}
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep&&!stop) currStep = min(currStep + 1, totalSteps);
 			if (currStep == 0) {
 				linesColor = -1;
-				resetColor(clone);
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				resetColor(newArr,size-1);
+				if (checkStep)createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
-			else if(currStep!=totalSteps) {
-				resetColor(clone);
-				if (currStep % 2 == 1) {
-					linesColor = 0;
-					setArrayDelete(arr, clone, idx, currStep / 2);
-					visualize(clone,size);
+			else if (currStep == 1) {
+				setArrayDelete(newArr, arr, idx, 0);
+				linesColor = 0;
+				resetColor(newArr,size-1);
+			}
+			else if (currStep <= 1 + idx * 2 + 1) {
+				resetColor(newArr,size-1);
+				if (currStep % 2 == 0) {
+					linesColor = 1;
+					setArrayDelete(newArr, arr, idx, (currStep - 1) / 2);
 				}
 				else {
-					linesColor = 1;
-					setArrayDelete(arr, clone, idx, currStep / 2);
-					visualize(clone,size);
+					linesColor = 2;
+					setArrayDelete(newArr, arr, idx, (currStep - 1) / 2);
 				}
-				
+			}
+			else if (currStep != totalSteps) {
+				resetColor(newArr,size-1);
+				if (currStep % 2 == 1) {
+					linesColor = 3;
+					setArrayDelete(newArr, arr, idx, (currStep-2) / 2);
+				}
+				else {
+					linesColor = 4;
+					setArrayDelete(newArr, arr, idx, (currStep-2 ) / 2);
+				}
 			}
 			else {
-				resetColor(clone);
-				linesColor = 3;
-				visualize(clone, size-1);
+				resetColor(newArr,size-1);
+				linesColor = 5;
+				setArrayDelete(newArr, arr, idx, size -1);
 			}
+			if (currStep)	visualize(newArr, size - 1);
 			highlightCode(generalFont, explain, code, linesColor, 100, 200, YELLOW, checkStep);
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
@@ -1313,12 +1460,14 @@ public:
 				}
 			}
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -1331,14 +1480,18 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
-		setArrayDelete(arr, clone, idx, size - idx - 1);
+		setArrayDelete(newArr, arr, idx, size - 1);
+		delete[] arr;
+		arr = new ArrayElement[size - 1];
 		for (int i = 0; i < size - 1; i++) {
-			arr[i] = clone[i];
+			arr[i] = newArr[i];
 		}
-		delete[] clone;
+		delete[] newArr;
 		size--;
 		resetColor();
 		SDL_DestroyTexture(buttonSpriteSheet);
@@ -1365,23 +1518,29 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		string oldVal = arr[idx].val;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
-			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (currStep == 0) {
 				linesColor = -1;
 				resetColor();
 				arr[idx].val = oldVal;
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				if (checkStep)createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else {
@@ -1401,12 +1560,14 @@ public:
 				}
 			}
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -1419,6 +1580,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -1429,8 +1592,6 @@ public:
 		TTF_CloseFont(generalFont);
 		return;
 	}
-
-
 };
 class ListNode {
 public:
@@ -1449,7 +1610,6 @@ public:
 	SDL_Color colorArrow;
 	SDL_Color colorText;
 	TTF_Font* numberFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
-
 	ListNode() {
 		this->val = "N";
 		this->next = nullptr;
@@ -1466,7 +1626,6 @@ public:
 		this->arrowDX = centerX + radius + 30;
 		this->arrowDY = centerY;
 	}
-
 	ListNode(string val, int centerX, int centerY, int radius) {
 		this->val = val;
 		this->next = nullptr;
@@ -1499,7 +1658,6 @@ public:
 		this->arrowDX = centerX + radius + 30;
 		this->arrowDY = centerY;
 	}
-
 	void displayNode() {
 		SDL_RenderDrawCircle(gRenderer, centerX, centerY, radius, colorNode);
 		SDL_RenderFillCircle(gRenderer, centerX, centerY, radius - 1, colorBg);
@@ -1556,7 +1714,6 @@ public:
 	SDL_Color colorArrow;
 	SDL_Color colorText;
 	TTF_Font* numberFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
-
 	DoublyListNode() {
 		this->val = "N";
 		this->next = nullptr;
@@ -1572,7 +1729,6 @@ public:
 		setArrowNextPos(centerX + radius - 3, centerY - 10, centerX + radius + 30, centerY - 10);
 		setArrowPrevPos(centerX - radius + 3, centerY + 10, centerX - radius - 30, centerY + 10);
 	}
-
 	DoublyListNode(string val, int centerX, int centerY, int radius) {
 		this->val = val;
 		this->next = nullptr;
@@ -1603,7 +1759,6 @@ public:
 		setArrowNextPos(centerX + radius - 3, centerY - 10, centerX + radius + 30, centerY - 10);
 		setArrowPrevPos(centerX - radius + 3, centerY + 10, centerX - radius - 30, centerY + 10);
 	}
-
 	void displayNode() {
 		SDL_RenderDrawCircle(gRenderer, centerX, centerY, radius, colorNode);
 		SDL_RenderFillCircle(gRenderer, centerX, centerY, radius - 1, colorBg);
@@ -1696,7 +1851,6 @@ public:
 			current = next;
 		}
 		head = nullptr;
-
 	}
 	virtual void visualize() {
 		ListNode* clone = head;
@@ -1788,6 +1942,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currHeadIndex = 0;
 		int framesCount = 1;
@@ -1797,25 +1952,30 @@ public:
 		else newNode = new ListNode(val, head->centerX, head->centerY + 100, 25);
 		ListNode* oldNode = getNode(idx);
 		ListNode* currHead = nullptr;
-		//ImGui::Render();
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
-			//ImGui_ImplSDLRenderer_NewFrame();
-			//ImGui_ImplSDL2_NewFrame();
-			//ImGui::NewFrame();
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			currHead = getNode(currHeadIndex);
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				currHeadIndex = 0;
+				if (tmp) tmp->next = oldNode;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if(checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep < totalSteps - 2) {
@@ -1826,7 +1986,6 @@ public:
 					currHeadIndex = currStep / 2;
 				}
 				else linesColor = 0;
-
 				visualize();
 			}
 			else {
@@ -1836,7 +1995,6 @@ public:
 					visualize();
 					newNode->displayNode();
 					linesColor = idx ? 3 : 0;
-
 				}
 				else if (currStep == totalSteps - 1) {
 					newNode->next = oldNode;
@@ -1850,7 +2008,6 @@ public:
 				else {
 					newNode->next = oldNode;
 					if (tmp)	tmp->next = newNode;
-					//if (oldNode)	newNode->setArrowPos(newNode->centerX, newNode->centerY - newNode->radius, idx ? oldNode->centerX - 25 : oldNode->centerX, oldNode->centerY + 25);
 					if (tmp)	tmp->setArrowPos(tmp->centerX, tmp->centerY + tmp->radius, newNode->centerX, newNode->centerY - 35);
 					visualize();
 					if (idx == 0) newNode->displayNode();
@@ -1871,12 +2028,14 @@ public:
 			else
 				createText(generalFont, RED, "Head", currHead->centerX - currHead->radius + 5, currHead->centerY - currHead->radius - 25, 10 * 4, 20);
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -1889,8 +2048,8 @@ public:
 					}
 				}
 			}
-			//ImGui::Render();
-			//ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -1937,7 +2096,6 @@ public:
 			else
 				clone = clone->next;
 			ans++;
-
 		}
 		return -1;
 	}
@@ -1967,25 +2125,33 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currHeadIndex = 0;
 		int framesCount = 1;
 		ListNode* currHead = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
-			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			currHead = getNode(currHeadIndex);
 			if (currStep == 0) {
 				linesColor = -1;
 				currHeadIndex = 0;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else {
@@ -2000,7 +2166,6 @@ public:
 						linesColor = 1;
 						currHeadIndex = currStep / 4;
 					}
-
 				}
 				else if (currStep % 4 == 3) {
 					if (getNode(currHeadIndex) && getNode(currHeadIndex)->val == val && currStep == totalSteps) {
@@ -2014,7 +2179,6 @@ public:
 					}
 				}
 				else linesColor = 4;
-
 				visualize();
 			}
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
@@ -2029,12 +2193,14 @@ public:
 			if (currHead)
 				createText(generalFont, RED, "Head", currHead->centerX - currHead->radius + 5, currHead->centerY - currHead->radius - 25, 10 * 4, 20);
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -2047,6 +2213,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -2092,6 +2260,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currIndex = -1;
 		int prevIndex = -1;
@@ -2101,15 +2270,20 @@ public:
 		ListNode* aft = getNode(idx + 1);
 		ListNode* currPtr = nullptr;
 		ListNode* prevPtr = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
-			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (currIndex >= 0)	currPtr = getNode(currIndex);
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
@@ -2119,7 +2293,9 @@ public:
 				currIndex = -1;
 				prevIndex = -1;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -2135,7 +2311,6 @@ public:
 				prevIndex = 0;
 				resetColor();
 				visualize();
-
 			}
 			else if (currStep < totalSteps - 1) {
 				resetColor();
@@ -2155,7 +2330,6 @@ public:
 					linesColor = 4;
 					prevIndex = currStep / 3;
 				}
-
 				visualize();
 			}
 			else {
@@ -2167,7 +2341,6 @@ public:
 					visualize();
 					toDelete->displayNode();
 					linesColor = 6;
-
 				}
 				else {
 					linesColor = 7;
@@ -2190,12 +2363,14 @@ public:
 			if (currPtr && currStep != totalSteps)	createText(generalFont, RED, "Curr", currPtr->centerX - currPtr->radius + 5, currPtr->centerY - currPtr->radius - 25, 10 * 4, 20);
 			if (prevPtr)	createText(generalFont, RED, "Prev", prevPtr->centerX - prevPtr->radius + 5, prevPtr->centerY - prevPtr->radius - 25, 10 * 4, 20);
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -2208,6 +2383,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -2246,6 +2423,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currIndex = -1;
 		int prevIndex = -1;
@@ -2254,14 +2432,20 @@ public:
 		ListNode* aft = head->next;
 		ListNode* currPtr = nullptr;
 		ListNode* prevPtr = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (currIndex >= 0)	currPtr = getNode(currIndex);
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
@@ -2272,7 +2456,9 @@ public:
 				currIndex = -1;
 				prevIndex = -1;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -2293,7 +2479,6 @@ public:
 				visualize();
 				if (currPtr)	createText(generalFont, RED, "toDel", currPtr->centerX - currPtr->radius, currPtr->centerY - currPtr->radius - 25, 10 * 5, 20);
 				if (prevPtr)	createText(generalFont, RED, "Head", prevPtr->centerX - prevPtr->radius + 5, prevPtr->centerY - prevPtr->radius - 25, 10 * 4, 20);
-
 			}
 			else {
 				linesColor = 2;
@@ -2316,14 +2501,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -2336,6 +2522,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -2373,26 +2561,36 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currHeadIndex = 0;
 		int framesCount = 1;
 		ListNode* currHead = nullptr;
 		ListNode* updateNode = getNode(idx);
 		string beforeUpdate = updateNode->val;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			currHead = getNode(currHeadIndex);
 			if (currStep == 0) {
 				linesColor = -1;
 				currHeadIndex = 0;
+				updateNode->val = beforeUpdate;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep < totalSteps) {
@@ -2406,7 +2604,6 @@ public:
 					currHeadIndex = currStep / 2;
 					currHead->setColorNode(RED);
 				}
-
 				visualize();
 			}
 			else {
@@ -2427,12 +2624,14 @@ public:
 			if (currHead)
 				createText(generalFont, RED, "Head", currHead->centerX - currHead->radius + 5, currHead->centerY - currHead->radius - 25, 10 * 4, 20);
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -2445,6 +2644,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -2473,6 +2674,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		ListNode* tmpHead = nullptr;
@@ -2480,20 +2682,28 @@ public:
 			"head = new ListNode(value,nullptr);"
 		};
 		ListNode* newNode = new ListNode(val, 100, 100, 25);
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			else tmpHead = nullptr;
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else {
@@ -2503,7 +2713,6 @@ public:
 				newNode->displayNode();
 				createText(generalFont, RED, "Head", newNode->centerX - newNode->radius + 5, newNode->centerY - newNode->radius - 25, 10 * 4, 20);
 			}
-
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
@@ -2512,14 +2721,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -2532,6 +2742,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -2545,8 +2757,6 @@ public:
 		TTF_CloseFont(generalFont);
 		return;
 	}
-
-
 };
 class CircularLinkedListVisualizer :public LinkedListVisualizer {
 private:
@@ -2616,6 +2826,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currHeadIndex = 0;
 		int framesCount = 1;
@@ -2624,22 +2835,30 @@ public:
 		newNode = new ListNode(val, tmp->centerX, tmp->centerY + 100, 25);
 		ListNode* oldNode = getNode(idx);
 		ListNode* currHead = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
-			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			currHead = getNode(currHeadIndex);
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				currHeadIndex = 0;
+				tmp->next = oldNode;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep < totalSteps - 2) {
@@ -2650,21 +2869,17 @@ public:
 					currHeadIndex = currStep / 2;
 				}
 				else linesColor = 0;
-
 				visualize();
 			}
 			else {
 				if (currStep == totalSteps - 2) {
-					//tmp->next = oldNode;
 					newNode->next = nullptr;
 					visualize();
 					newNode->displayNode();
 					linesColor = idx ? 3 : 0;
-
 				}
 				else if (currStep == totalSteps - 1) {
 					newNode->next = oldNode;
-					//tmp->next = oldNode;
 					newNode->setArrowPos(newNode->centerX + 10, newNode->centerY - newNode->radius + 5, oldNode->centerX - 25, oldNode->centerY + 25);
 					tmp->setArrowPos(tmp->centerX + tmp->radius, tmp->centerY, tmp->centerX + tmp->radius + 30, tmp->centerY);
 					visualize();
@@ -2672,9 +2887,6 @@ public:
 					linesColor = idx ? 4 : 1;
 				}
 				else {
-					//newNode->next = oldNode;
-					//tmp->next = newNode;
-					//if (oldNode)	newNode->setArrowPos(newNode->centerX, newNode->centerY - newNode->radius, idx ? oldNode->centerX - 25 : oldNode->centerX, oldNode->centerY + 25);
 					tmp->setArrowPos(tmp->centerX, tmp->centerY + tmp->radius, newNode->centerX, newNode->centerY - 35);
 					visualize();
 					newNode->displayNode();
@@ -2694,12 +2906,14 @@ public:
 			else
 				createText(generalFont, RED, "Head", currHead->centerX - currHead->radius + 5, currHead->centerY - currHead->radius - 25, 10 * 4, 20);
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -2712,6 +2926,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -2744,6 +2960,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int headIndex = -1;
 		int framesCount = 1;
@@ -2755,22 +2972,31 @@ public:
 			"head = newNode;"
 		};
 		ListNode* newNode = new ListNode(val, head->centerX, head->centerY + 100, 25);
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (headIndex >= 0)	tmpHead = getNode(headIndex);
 			else tmpHead = nullptr;
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				headIndex = -1;
+				newNode->next = nullptr;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -2809,8 +3035,6 @@ public:
 					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
-					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
-					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
 					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, tail->colorArrow);
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
@@ -2834,8 +3058,6 @@ public:
 					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
-					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
-					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
 					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, tail->colorArrow);
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
@@ -2850,14 +3072,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -2870,6 +3093,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -2883,7 +3108,6 @@ public:
 		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
-
 	}
 	void insertStepTail(int idx, string val, bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
@@ -2903,6 +3127,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		ListNode* tmpTail = nullptr;
@@ -2910,17 +3135,23 @@ public:
 			"ListNode* newNode = new ListNode(value,nullptr);",
 			"newNode->next = head;",
 			"tail->next = newNode;",
-			"tail = tail->next"
+			"tail = tail->next;"
 		};
 		ListNode* newNode = new ListNode(val, head->centerX, head->centerY + 100, 25);
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (currStep != 0) {
 				tmpTail = tail;
 			}
@@ -2928,8 +3159,11 @@ public:
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
+				newNode->next = nullptr;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -2965,8 +3199,6 @@ public:
 					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
-					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
-					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
 					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, tail->colorArrow);
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
@@ -2989,8 +3221,6 @@ public:
 					SDL_Color arrow = tail->colorArrow;
 					SDL_SetRenderDrawColor(gRenderer, arrow.r, arrow.g, arrow.b, 255);
 					SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 25, tail->centerX, tail->centerY + 100);
-					//SDL_RenderDrawLine(gRenderer, tail->centerX, tail->centerY + 75, head->centerX - 75, head->centerY + 75);
-					//SDL_RenderDrawLine(gRenderer, head->centerX - 75, head->centerY + 75, head->centerX - 75, head->centerY);
 					DrawArrow(gRenderer, tail->centerX, head->centerX + 35, tail->centerY + 100, head->centerY + 100, 8, tail->colorArrow);
 					SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 				}
@@ -3005,14 +3235,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -3025,6 +3256,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -3039,7 +3272,6 @@ public:
 		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
-
 	}
 	void deleteStep(int idx, bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
@@ -3069,6 +3301,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currIndex = -1;
 		int prevIndex = -1;
@@ -3078,15 +3311,20 @@ public:
 		ListNode* aft = getNode(idx + 1);
 		ListNode* currPtr = nullptr;
 		ListNode* prevPtr = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
-			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (currIndex >= 0)	currPtr = getNode(currIndex);
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
@@ -3095,8 +3333,13 @@ public:
 				linesColor = -1;
 				currIndex = -1;
 				prevIndex = -1;
+				prev->next = toDelete;
+				toDelete->next = aft;
+				if (!aft) tail = toDelete;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -3112,7 +3355,6 @@ public:
 				prevIndex = 0;
 				resetColor();
 				visualize();
-
 			}
 			else if (currStep < totalSteps - 1) {
 				resetColor();
@@ -3132,14 +3374,12 @@ public:
 					linesColor = 4;
 					prevIndex = currStep / 3;
 				}
-
 				visualize();
 			}
 			else {
 				if (currStep == totalSteps - 1) {
 					if (!aft) {
 						tail = toDelete;
-						//tail->DrawArrow(gRenderer, head->centerX - 75, head->centerX - 35, head->centerY, head->centerY, 8, BLACK);
 						prev->setArrowPos(head->centerX - 75, head->centerY, head->centerX - 35, head->centerY);
 						SDL_Color old;
 						SDL_GetRenderDrawColor(gRenderer, &old.r, &old.g, &old.b, &old.a);
@@ -3155,7 +3395,6 @@ public:
 					visualize();
 					toDelete->displayNode();
 					linesColor = 6;
-
 				}
 				else {
 					if (!aft) tail = prev;
@@ -3190,12 +3429,14 @@ public:
 			if (currPtr && currStep != totalSteps)	createText(generalFont, RED, "Curr", currPtr->centerX - currPtr->radius + 5, currPtr->centerY - currPtr->radius - 25, 10 * 4, 20);
 			if (prevPtr)	createText(generalFont, RED, "Prev", prevPtr->centerX - prevPtr->radius + 5, prevPtr->centerY - prevPtr->radius - 25, 10 * 4, 20);
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -3208,6 +3449,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -3250,25 +3493,33 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currHeadIndex = 0;
 		int framesCount = 1;
 		ListNode* currHead = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
-			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			currHead = getNode(currHeadIndex);
 			if (currStep == 0) {
 				linesColor = -1;
 				currHeadIndex = 0;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else {
@@ -3283,7 +3534,6 @@ public:
 						linesColor = 1;
 						currHeadIndex = currStep / 4;
 					}
-
 				}
 				else if (currStep % 4 == 3) {
 					if (getNode(currHeadIndex) && getNode(currHeadIndex)->val == val && currStep == totalSteps) {
@@ -3297,7 +3547,6 @@ public:
 					}
 				}
 				else linesColor = 4;
-
 				visualize();
 			}
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
@@ -3312,12 +3561,14 @@ public:
 			if (currHead)
 				createText(generalFont, RED, "Head", currHead->centerX - currHead->radius + 5, currHead->centerY - currHead->radius - 25, 10 * 4, 20);
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -3330,6 +3581,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -3363,6 +3616,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currIndex = -1;
 		int prevIndex = -1;
@@ -3371,14 +3625,20 @@ public:
 		ListNode* aft = head->next;
 		ListNode* currPtr = nullptr;
 		ListNode* prevPtr = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (currIndex >= 0)	currPtr = getNode(currIndex);
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
@@ -3389,7 +3649,9 @@ public:
 				currIndex = -1;
 				prevIndex = -1;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -3402,7 +3664,6 @@ public:
 				if (prevPtr)	createText(generalFont, RED, "Head", prevPtr->centerX - prevPtr->radius + 5, prevPtr->centerY - prevPtr->radius - 25, 10 * 4, 20);
 			}
 			else if (currStep == 2) {
-				head = toDelete;
 				linesColor = 1;
 				currIndex = 0;
 				prevIndex = 1;
@@ -3410,7 +3671,6 @@ public:
 				visualize();
 				if (currPtr)	createText(generalFont, RED, "toDel", currPtr->centerX - currPtr->radius, currPtr->centerY - currPtr->radius - 25, 10 * 5, 20);
 				if (prevPtr)	createText(generalFont, RED, "Head", prevPtr->centerX - prevPtr->radius + 5, prevPtr->centerY - prevPtr->radius - 25, 10 * 4, 20);
-
 			}
 			else if (currStep == 3) {
 				currIndex = 0;
@@ -3491,14 +3751,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -3511,6 +3772,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -3543,6 +3806,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		ListNode* tmpHead = nullptr;
@@ -3552,20 +3816,28 @@ public:
 			"tail->next = head;"
 		};
 		ListNode* newNode = new ListNode(val, 100, 100, 25);
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			else tmpHead = nullptr;
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -3600,7 +3872,6 @@ public:
 				DrawArrow(gRenderer, newNode->centerX - 75, newNode->centerX - 35, newNode->centerY, newNode->centerY, 8, tail->colorArrow);
 				SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
 			}
-
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
@@ -3609,14 +3880,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -3629,6 +3901,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -3643,8 +3917,6 @@ public:
 		TTF_CloseFont(generalFont);
 		return;
 	}
-
-
 };
 class DoublyLinkedListVisualizer {
 private:
@@ -3665,7 +3937,6 @@ public:
 			current = next;
 		}
 		head = nullptr;
-
 	}
 	void visualize() {
 		DoublyListNode* clone = head;
@@ -3733,7 +4004,6 @@ public:
 			else
 				clone = clone->next;
 			ans++;
-
 		}
 		return -1;
 	}
@@ -3763,25 +4033,33 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currHeadIndex = 0;
 		int framesCount = 1;
 		DoublyListNode* currHead = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
-			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			currHead = getNode(currHeadIndex);
 			if (currStep == 0) {
 				linesColor = -1;
 				currHeadIndex = 0;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else {
@@ -3796,7 +4074,6 @@ public:
 						linesColor = 1;
 						currHeadIndex = currStep / 4;
 					}
-
 				}
 				else if (currStep % 4 == 3) {
 					if (getNode(currHeadIndex) && getNode(currHeadIndex)->val == val && currStep == totalSteps) {
@@ -3810,7 +4087,6 @@ public:
 					}
 				}
 				else linesColor = 4;
-
 				visualize();
 			}
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
@@ -3825,12 +4101,14 @@ public:
 			if (currHead)
 				createText(generalFont, RED, "Head", currHead->centerX - currHead->radius + 5, currHead->centerY - currHead->radius - 25, 10 * 4, 20);
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -3843,6 +4121,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -3875,26 +4155,36 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currHeadIndex = 0;
 		int framesCount = 1;
 		DoublyListNode* currHead = nullptr;
 		DoublyListNode* updateNode = getNode(idx);
 		string beforeUpdate = updateNode->val;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			currHead = getNode(currHeadIndex);
 			if (currStep == 0) {
 				linesColor = -1;
 				currHeadIndex = 0;
+				updateNode->val = beforeUpdate;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep < totalSteps) {
@@ -3908,7 +4198,6 @@ public:
 					currHeadIndex = currStep / 2;
 					currHead->setColorNode(RED);
 				}
-
 				visualize();
 			}
 			else {
@@ -3929,12 +4218,14 @@ public:
 			if (currHead)
 				createText(generalFont, RED, "Head", currHead->centerX - currHead->radius + 5, currHead->centerY - currHead->radius - 25, 10 * 4, 20);
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -3947,6 +4238,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -3983,6 +4276,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currHeadIndex = 0;
 		int framesCount = 1;
@@ -3991,22 +4285,31 @@ public:
 		newNode = new DoublyListNode(val, tmp->centerX, tmp->centerY + 100, 25);
 		DoublyListNode* oldNode = getNode(idx);
 		DoublyListNode* currHead = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
-			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
-			//createText(generalFont, BLACK, to_string(currStep),0,0,50,50);
+			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 300, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			currHead = getNode(currHeadIndex);
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				currHeadIndex = 0;
+				tmp->next = oldNode;
+				if(oldNode)oldNode->prev = tmp;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep < totalSteps - 2) {
@@ -4017,12 +4320,10 @@ public:
 					currHeadIndex = currStep / 2;
 				}
 				else linesColor = 0;
-
 				visualize();
 			}
 			else {
 				if (currStep == totalSteps - 2) {
-					//tmp->next = oldNode;
 					newNode->next = oldNode;
 					newNode->prev = tmp;
 					newNode->setArrowPrevUp();
@@ -4033,7 +4334,6 @@ public:
 					visualize();
 					newNode->displayNode();
 					linesColor = 3;
-
 				}
 				else if (currStep == totalSteps - 1) {
 					tmp->next = oldNode;
@@ -4047,9 +4347,7 @@ public:
 					linesColor = 4;
 				}
 				else {
-					//newNode->next = oldNode;
 					tmp->next = newNode;
-					//if (oldNode)	newNode->setArrowPos(newNode->centerX, newNode->centerY - newNode->radius, idx ? oldNode->centerX - 25 : oldNode->centerX, oldNode->centerY + 25);
 					tmp->setArrowNextDown();
 					visualize();
 					newNode->displayNode();
@@ -4069,14 +4367,16 @@ public:
 			else
 				createText(generalFont, RED, "Head", currHead->centerX - currHead->radius + 5, currHead->centerY - currHead->radius - 25, 10 * 4, 20);
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
-					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
+					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 300 && e.button.y < 350) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
 					if (checkStep) {
 						switch (e.key.keysym.sym)
@@ -4087,6 +4387,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -4121,6 +4423,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int headIndex = -1;
 		int framesCount = 1;
@@ -4132,22 +4435,33 @@ public:
 			"head = newNode;"
 		};
 		DoublyListNode* newNode = new DoublyListNode(val, head ? head->centerX : 100, head ? head->centerY + 100 : 100, 25);
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (headIndex >= 0)	tmpHead = getNode(headIndex);
 			else tmpHead = nullptr;
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				headIndex = -1;
+				newNode->next = nullptr;
+				newNode->prev = nullptr;
+				head->prev = nullptr;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -4198,14 +4512,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -4218,6 +4533,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -4234,7 +4551,6 @@ public:
 		return;
 	}
 	void deleteStep(int idx, bool checkStep) {
-
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
 		SDL_Texture* explain = loadImgTexture("resources/Prompt/Explanation.png");
 		TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 100);
@@ -4262,6 +4578,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currIndex = -1;
 		int prevIndex = -1;
@@ -4271,14 +4588,20 @@ public:
 		DoublyListNode* aft = getNode(idx + 1);
 		DoublyListNode* currPtr = nullptr;
 		DoublyListNode* prevPtr = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 400, 100, 50, NULL);
-			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
+			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 300, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (currIndex >= 0)	currPtr = getNode(currIndex);
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
@@ -4287,8 +4610,14 @@ public:
 				linesColor = -1;
 				currIndex = -1;
 				prevIndex = -1;
+				prev->next = toDelete;
+				toDelete->next = aft;
+				if (aft) aft->prev = toDelete;
+				toDelete->prev = prev;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -4310,7 +4639,6 @@ public:
 					getNode(currStep / 2)->setColorNode(RED);
 					linesColor = 2;
 				}
-
 				visualize();
 			}
 			else {
@@ -4320,7 +4648,6 @@ public:
 					prev->next = toDelete;
 					currPtr = toDelete;
 					if (aft) {
-						//aft->setArrowPrevPos(aft->centerX - aft->radius, aft->centerY, prev->centerX + 35, prev->centerY);
 						aft->setArrowPrevDownLeft();
 					}
 					toDelete->setCenterPos(prev->centerX + 90, prev->centerY + 100);
@@ -4333,14 +4660,12 @@ public:
 					visualize();
 					toDelete->displayNode();
 					linesColor = 4;
-
 				}
 				else if (currStep == totalSteps - 2) {
 					currPtr = toDelete;
 					if (!aft) { prev->next = nullptr; }
 					if (aft) {
 						prev->setArrowNextX2();
-						//aft->setArrowPrevPos(aft->centerX - aft->radius, aft->centerY, prev->centerX + 35, prev->centerY);
 						aft->setArrowPrevDownLeft();
 					}
 					toDelete->setCenterPos(prev->centerX + 90, prev->centerY + 100);
@@ -4353,7 +4678,6 @@ public:
 					visualize();
 					toDelete->displayNode();
 					linesColor = 5;
-
 				}
 				else if (currStep == totalSteps - 1) {
 					currPtr = toDelete;
@@ -4385,14 +4709,16 @@ public:
 				else createText(generalFont, RED, "toDel", currPtr->centerX - currPtr->radius, currPtr->centerY + currPtr->radius + 5, 10 * 5, 20);
 			}
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) { quit = true; }
-					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
+					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 300 && e.button.y < 350) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
 					if (checkStep) {
 						switch (e.key.keysym.sym)
@@ -4403,6 +4729,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -4444,6 +4772,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currIndex = -1;
 		int prevIndex = -1;
@@ -4452,14 +4781,20 @@ public:
 		DoublyListNode* aft = head->next;
 		DoublyListNode* currPtr = nullptr;
 		DoublyListNode* prevPtr = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (currIndex >= 0)	currPtr = getNode(currIndex);
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
@@ -4469,8 +4804,12 @@ public:
 				linesColor = -1;
 				currIndex = -1;
 				prevIndex = -1;
+				toDelete->next = aft;
+				if (aft) aft->prev = toDelete;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -4492,7 +4831,6 @@ public:
 				visualize();
 				if (currPtr)	createText(generalFont, RED, "toDel", currPtr->centerX - currPtr->radius, currPtr->centerY - currPtr->radius - 25, 10 * 5, 20);
 				if (prevPtr)	createText(generalFont, RED, "Head", prevPtr->centerX - prevPtr->radius + 5, prevPtr->centerY - prevPtr->radius - 25, 10 * 4, 20);
-
 			}
 			else if (currStep == 3) {
 				if (aft) aft->prev = nullptr;
@@ -4525,14 +4863,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -4545,6 +4884,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -4578,25 +4919,34 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		vector<string> code = {
 			"head = new DLLNode(value,nullptr,nullptr);"
 		};
 		DoublyListNode* newNode = new DoublyListNode(val, 100, 100, 25);
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else {
@@ -4606,7 +4956,6 @@ public:
 				newNode->displayNode();
 				createText(generalFont, RED, "Head", newNode->centerX - newNode->radius + 5, newNode->centerY - newNode->radius - 25, 10 * 4, 20);
 			}
-
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
@@ -4615,14 +4964,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -4635,6 +4985,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -4669,7 +5021,6 @@ public:
 		}
 		head = nullptr;
 		listSize = 0;
-
 	}
 	void visualize() {
 		ListNode* clone = head;
@@ -4751,6 +5102,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currIndex = -1;
 		int prevIndex = -1;
@@ -4759,14 +5111,20 @@ public:
 		ListNode* aft = head->next;
 		ListNode* currPtr = nullptr;
 		ListNode* prevPtr = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (currIndex >= 0)	currPtr = getNode(currIndex);
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
@@ -4777,7 +5135,9 @@ public:
 				currIndex = -1;
 				prevIndex = -1;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 140, 250, 840, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 140, 250, 840, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -4798,7 +5158,6 @@ public:
 				visualize();
 				if (currPtr)	createText(generalFont, RED, "toDel", currPtr->centerX + currPtr->radius, currPtr->centerY - 10, 10 * 5, 20);
 				if (prevPtr)	createText(generalFont, RED, "Head", prevPtr->centerX + prevPtr->radius + 5, prevPtr->centerY - 10, 10 * 4, 20);
-
 			}
 			else {
 				linesColor = 2;
@@ -4810,7 +5169,6 @@ public:
 					clone->displayNode();
 					clone = clone->next;
 				}
-				//if (currPtr)	createText(generalFont, RED, "toDel", currPtr->centerX + currPtr->radius + 5, currPtr->centerY - 10, 10 * 4, 20);
 				if (prevPtr)	createText(generalFont, RED, "Head", prevPtr->centerX - prevPtr->radius + 5, prevPtr->centerY - prevPtr->radius - 25, 10 * 4, 20);
 			}
 			if (linesColor != -1) {
@@ -4821,14 +5179,15 @@ public:
 						createText(generalFont, BLACK, code[i], 200, 100 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -4841,6 +5200,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -4873,6 +5234,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int headIndex = -1;
 		int framesCount = 1;
@@ -4883,22 +5245,31 @@ public:
 			"head = newNode;"
 		};
 		ListNode* newNode = new ListNode(val, head ? head->centerX + 100 : 100, head ? head->centerY : 100, 25);
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (headIndex >= 0)	tmpHead = getNode(headIndex);
 			else tmpHead = nullptr;
 			highlightCode(generalFont, explain, code, linesColor, 200, 200, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				headIndex = -1;
+				newNode->next = nullptr;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 140, 250, 840, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 140, 250, 840, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -4937,14 +5308,15 @@ public:
 						createText(generalFont, BLACK, code[i], 200, 200 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -4957,6 +5329,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -4970,7 +5344,6 @@ public:
 		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
-
 	}
 	void clearStep(bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
@@ -4990,28 +5363,37 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		vector<string> code = {
 			"while(listSize--)",
-			"    queue.pop();"
+			"    stack.pop();"
 		};
 		ListNode* currHead = nullptr;
 		ListNode* clone = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			highlightCode(generalFont, explain, code, linesColor, 200, 200, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				currHead = nullptr;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 140, 250, 840, 40);
 				visualize();
 			}
 			else {
@@ -5027,15 +5409,8 @@ public:
 					clone->displayNode();
 					clone = clone->next;
 				}
-
-
-				//linesColor = 1;
-				//resetColor();
-				//visualize();
 				if (currHead)	createText(generalFont, RED, "Head", currHead->centerX - currHead->radius + 5, currHead->centerY - currHead->radius - 25, 10 * 4, 20);
-				//createText(generalFont, RED, "Tail", newNode->centerX - newNode->radius + 5, newNode->centerY + newNode->radius + 5, 10 * 4, 20);
 			}
-
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
@@ -5044,14 +5419,15 @@ public:
 						createText(generalFont, BLACK, code[i], 200, 200 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -5064,6 +5440,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -5100,7 +5478,6 @@ public:
 		head = nullptr;
 		tail = nullptr;
 		listSize = 0;
-
 	}
 	void visualize() {
 		ListNode* clone = head;
@@ -5117,9 +5494,9 @@ public:
 		auto clone = head;
 		for (int i = 1; i < list.size(); i++) {
 			clone->next = new ListNode(list[i], 100 + 90 * i, 100, 25);
-			if (i == list.size() - 1) tail = clone;
 			clone = clone->next;
 		}
+		tail = clone;
 		resetArrow();
 	}
 	void reCalcCoordinate() {
@@ -5183,6 +5560,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int currIndex = -1;
 		int prevIndex = -1;
@@ -5191,14 +5569,20 @@ public:
 		ListNode* aft = head->next;
 		ListNode* currPtr = nullptr;
 		ListNode* prevPtr = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			if (currIndex >= 0)	currPtr = getNode(currIndex);
 			else currPtr = nullptr;
 			if (prevIndex >= 0)	prevPtr = getNode(prevIndex);
@@ -5209,7 +5593,9 @@ public:
 				currIndex = -1;
 				prevIndex = -1;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -5222,7 +5608,6 @@ public:
 				if (prevPtr)	createText(generalFont, RED, "Head", prevPtr->centerX - prevPtr->radius + 5, prevPtr->centerY - prevPtr->radius - 25, 10 * 4, 20);
 			}
 			else if (currStep == 2) {
-				head = toDelete;
 				linesColor = 1;
 				currIndex = 0;
 				prevIndex = 1;
@@ -5230,7 +5615,6 @@ public:
 				visualize();
 				if (currPtr)	createText(generalFont, RED, "toDel", currPtr->centerX - currPtr->radius, currPtr->centerY - currPtr->radius - 25, 10 * 5, 20);
 				if (prevPtr)	createText(generalFont, RED, "Head", prevPtr->centerX - prevPtr->radius + 5, prevPtr->centerY - prevPtr->radius - 25, 10 * 4, 20);
-
 			}
 			else {
 				linesColor = 2;
@@ -5242,7 +5626,6 @@ public:
 					clone->displayNode();
 					clone = clone->next;
 				}
-				//if (currPtr)	createText(generalFont, RED, "toDel", currPtr->centerX + currPtr->radius + 5, currPtr->centerY - 10, 10 * 4, 20);
 				if (prevPtr)	createText(generalFont, RED, "Head", prevPtr->centerX - prevPtr->radius + 5, prevPtr->centerY - prevPtr->radius - 25, 10 * 4, 20);
 			}
 			if (linesColor != -1) {
@@ -5253,14 +5636,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -5273,6 +5657,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -5305,6 +5691,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		vector<string> code = {
@@ -5313,19 +5700,28 @@ public:
 			"tail = tail->next;"
 		};
 		ListNode* newNode = new ListNode(val, tail->centerX + 100, tail->centerY, 25);
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
+				tail->next = nullptr;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -5361,14 +5757,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -5381,6 +5778,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -5394,7 +5793,6 @@ public:
 		SDL_DestroyTexture(explain);
 		TTF_CloseFont(generalFont);
 		return;
-
 	}
 	void insertEmpty(string val, bool checkStep) {
 		SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
@@ -5414,6 +5812,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		ListNode* tmpHead = nullptr;
@@ -5422,20 +5821,28 @@ public:
 			"tail = head;"
 		};
 		ListNode* newNode = new ListNode(val, 100, 100, 25);
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			else tmpHead = nullptr;
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else if (currStep == 1) {
@@ -5453,7 +5860,6 @@ public:
 				createText(generalFont, RED, "Head", newNode->centerX - newNode->radius + 5, newNode->centerY - newNode->radius - 25, 10 * 4, 20);
 				createText(generalFont, RED, "Tail", newNode->centerX - newNode->radius + 5, newNode->centerY + newNode->radius + 5, 10 * 4, 20);
 			}
-
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
@@ -5462,14 +5868,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -5482,6 +5889,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -5514,6 +5923,7 @@ public:
 		}
 		SDL_Event e;
 		bool quit = false;
+		bool stop = false;
 		int currStep = checkStep ? 0 : 1;
 		int framesCount = 1;
 		vector<string> code = {
@@ -5522,20 +5932,28 @@ public:
 		};
 		ListNode* currHead = nullptr;
 		ListNode* clone = nullptr;
+		ImGui::Render();
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		while (!quit) {
 			SDL_RenderClear(gRenderer);
+			ImGui_ImplSDLRenderer_NewFrame();
+			ImGui_ImplSDL2_NewFrame();
+			ImGui::NewFrame();
 			SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
 			SDL_RenderFillRect(gRenderer, &SCREEN);
 			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
 			if (!checkStep)	createButton(buttonSpriteSheet, &buttonPosArray[speed][0], &buttonPosArray[speed][1], false, 900, 400, 50, 50, nullptr);
 			t = 60 / (speed + 1);
-			if (framesCount % t == 0 && !checkStep) currStep = min(currStep + 1, totalSteps);
+			ImGuiControlStep(currStep, totalSteps, checkStep, speed, t, quit, stop);
+			if (framesCount % t == 0 && !checkStep && !stop) currStep = min(currStep + 1, totalSteps);
 			highlightCode(generalFont, explain, code, linesColor, 100, 250, YELLOW, checkStep);
 			if (currStep == 0) {
 				linesColor = -1;
 				currHead = nullptr;
 				resetColor();
-				createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
+				reCalcCoordinate();
+				resetArrow();
+				if (checkStep)	createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 				visualize();
 			}
 			else {
@@ -5551,15 +5969,8 @@ public:
 					clone->displayNode();
 					clone = clone->next;
 				}
-				
-
-				//linesColor = 1;
-				//resetColor();
-				//visualize();
 				if(currHead)	createText(generalFont, RED, "Head", currHead->centerX - currHead->radius + 5, currHead->centerY - currHead->radius - 25, 10 * 4, 20);
-				//createText(generalFont, RED, "Tail", newNode->centerX - newNode->radius + 5, newNode->centerY + newNode->radius + 5, 10 * 4, 20);
 			}
-
 			if (linesColor != -1) {
 				for (int i = 0; i < code.size(); i++) {
 					if (i == linesColor)
@@ -5568,14 +5979,15 @@ public:
 						createText(generalFont, BLACK, code[i], 100, 250 + i * 50, code[i].size() * 16, 40);
 				}
 			}
-
 			if (SDL_PollEvent(&e)) {
+				ImGui_ImplSDL2_ProcessEvent(&e);
 				switch (e.type) {
 				case SDL_QUIT:
 					quit = true;
 					quitGame();
 					break;
 				case SDL_MOUSEBUTTONDOWN:
+					if (ImGui::GetIO().WantCaptureMouse) break;
 					if (e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) { quit = true; }
 					else if (!checkStep && e.button.x > 900 && e.button.x < 950 && e.button.y > 400 && e.button.y < 450) speed = (speed + 1) % 4;
 				case SDL_KEYDOWN:
@@ -5588,6 +6000,8 @@ public:
 					}
 				}
 			}
+			ImGui::Render();
+			ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 			SDL_RenderPresent(gRenderer);
 			framesCount++;
 		}
@@ -5631,19 +6045,14 @@ bool alertInitialize(bool& alert1, bool& alert2, bool& alert3, const string& s1,
 			alert3 = false;
 			return false;
 		}
-
 		if (tmp.size() >= 3||temp < 0 || temp >= 100) {
 			alert2 = true;
 			alert1 = false;
 			alert3 = false;
 			return false;
 		}
-
 	}
 	return true;
-
-
-
 }
 vector<string> initializeFormInput() {
 	SDL_Rect rect;
@@ -5760,7 +6169,6 @@ vector<string> initializeFormInput() {
 				ss >> temp;
 				ans.push_back(temp);
 			}
-
 		}
 		else {
 			return ans;
@@ -5777,9 +6185,7 @@ vector<string> initializeFormInput() {
 	SDL_DestroyTexture(form);
 	TTF_CloseFont(generalFont);
 	return ans;
-
 }
-
 tuple <int, string, bool, bool> indexValueFormInput(string formName, int indexLimit) {
 	SDL_Rect rect;
 	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
@@ -5885,7 +6291,6 @@ tuple <int, string, bool, bool> indexValueFormInput(string formName, int indexLi
 		SDL_RenderPresent(gRenderer);
 	}
 	SDL_StopTextInput();
-
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(form);
 	TTF_CloseFont(generalFont);
@@ -5893,7 +6298,6 @@ tuple <int, string, bool, bool> indexValueFormInput(string formName, int indexLi
 		return make_tuple(stoi(trim(text1)), trim(text2), checkStep, true);
 	}
 	else return make_tuple(0, "-1", false, false);
-
 }
 tuple <int, bool, bool> indexFormInput(string formName, int indexLimit) {
 	SDL_Rect rect;
@@ -5929,7 +6333,6 @@ tuple <int, bool, bool> indexFormInput(string formName, int indexLimit) {
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], leftMouseDown, 370, 500, 200, 66, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 0, 0, 50, 50, NULL);
 		createText(generalFont, { 0 , 0 , 0 }, text1, 183, 246, text1.size() * 20, 40);
-
 		if (SDL_GetTicks64() % 1000 >= 500) {
 			switch (activeField) {
 			case 1:
@@ -5984,7 +6387,6 @@ tuple <int, bool, bool> indexFormInput(string formName, int indexLimit) {
 		SDL_RenderPresent(gRenderer);
 	}
 	SDL_StopTextInput();
-
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(form);
 	SDL_DestroyTexture(wrongFormat);
@@ -5995,7 +6397,6 @@ tuple <int, bool, bool> indexFormInput(string formName, int indexLimit) {
 		return make_tuple(idx, checkStep, true);
 	}
 	else return make_tuple(0, false, false);
-
 }
 tuple <string, bool, bool> valueFormInput(string formName) {
 	SDL_Rect rect;
@@ -6083,7 +6484,6 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 		SDL_RenderPresent(gRenderer);
 	}
 	SDL_StopTextInput();
-
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(form);
 	TTF_CloseFont(generalFont);
@@ -6091,7 +6491,6 @@ tuple <string, bool, bool> valueFormInput(string formName) {
 		return make_tuple(trim(text1), checkStep, true);
 	}
 	else return make_tuple("0", false, false);
-
 }
 void ImGuiChangeColorNode(ListNode* node,bool& shownWindow) {
 	SDL_Color colorNode = node->colorNode;
@@ -6119,7 +6518,6 @@ void ImGuiChangeColorNode(ListNode* node,bool& shownWindow) {
 	val = min(99, val);
 	val = max(val, 0);
 	node->val = to_string(val);
-
 }
 void ImGuiChangeColorDoublyNode(DoublyListNode* node, bool& shownWindow) {
 	SDL_Color colorNode = node->colorNode;
@@ -6147,7 +6545,6 @@ void ImGuiChangeColorDoublyNode(DoublyListNode* node, bool& shownWindow) {
 	val = min(99, val);
 	val = max(val, 0);
 	node->val = to_string(val);
-
 }
 void ImGuiChangeColorArrElem(ArrayElement& elem, bool& shownWindow) {
 	SDL_Color colorNode = elem.color;
@@ -6199,9 +6596,6 @@ void ImGuiChangeColorElem(vector<SDL_Color>& choice, int& textSize, bool& shownW
 	choice[1] = { (Uint8)(colorElemBgF.x * 255), (Uint8)(colorElemBgF.y * 255), (Uint8)(colorElemBgF.z * 255) };
 	choice[4] = { (Uint8)(colorArrowF.x * 255), (Uint8)(colorArrowF.y * 255), (Uint8)(colorArrowF.z * 255) };
 }
-void ImGuiAlert() {
-	
-}
 void staticArrayVisualizing() {
 	SDL_Event e;
 	SDL_Rect rect;
@@ -6211,263 +6605,17 @@ void staticArrayVisualizing() {
 	for (int i = 0; i < 8; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 165 + 144 * i, 200, 100);
 		buttonPosArray[i][1] = *createRect(&rect, 559, 165 + 144 * i, 200, 100);
-
-	}
-	buttonPosArray[10][0] = *createRect(&rect, 2000, 1029, 50, 50);
-	buttonPosArray[10][1] = *createRect(&rect, 1819, 1029, 50, 50);;
-	SDL_Rect endButton = *createRect(&rect, 1413, 165, 100, 50);
-	SDL_Rect endButtonHover = *createRect(&rect, 1683, 165, 100, 50);
-	SDL_Color bgColor = theme.getBgColor();
-	bool quit = false;
-	bool leftMouseDown = false;
-	ArrayVisualizer arrayVisualizer;
-	vector<string> v = { "11","23","24","35" };
-	arrayVisualizer.initialize(v);
-	int cnt = 0;
-	bool isKeyPress = false;
-	int delay = -1;
-	int idx = -1;
-	bool guideTextVisible = false;
-	string val = "";
-	int highlightIdx = -1;
-	int activeElem = -1;
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	ImGui::StyleColorsDark();
-	ImGui_ImplSDL2_InitForSDLRenderer(window, gRenderer);
-	ImGui_ImplSDLRenderer_Init(gRenderer);
-	bool shownImGuiWindow = true;
-	while (!quit) {
-		cnt++;
-		SDL_RenderClear(gRenderer);
-		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
-		ImGui_ImplSDLRenderer_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
-		SDL_RenderFillRect(gRenderer, &SCREEN);
-		//createText(generalFont, BLACK, isEqualColor(BLACK, arrayVisualizer.arr[0].textColor) ? "BLACK" : "WHITE", 0, 0, 50, 50);
-		arrayVisualizer.visualize();
-		if(!arrayVisualizer.checkAnyStep())	highlightIdx = highlightArrElem(100,100,YELLOW,arrayVisualizer.n);
-		if (!arrayVisualizer.checkAnyStep()) {
-			createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
-			createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], false, 200, 530, 200, 100, NULL);
-			createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 400, 530, 200, 100, NULL);
-			createButton(buttonSpriteSheet, &buttonPosArray[3][0], &buttonPosArray[3][1], false, 600, 530, 200, 100, NULL);
-			createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 800, 530, 200, 100, NULL);
-			createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
-		}
-		else {
-			createButton(buttonSpriteSheet, &endButton, &endButtonHover, false, 850, 500, 100, 50, NULL);
-		}
-		//isKeyPress = arrayVisualizer.keyboardEvent(idx,val);
-		if (activeElem != -1 && shownImGuiWindow&& !arrayVisualizer.checkAnyStep()) {
-			ImGuiChangeColorArrElem(arrayVisualizer.arr[activeElem], shownImGuiWindow);
-		}
-		if (arrayVisualizer.checkStepEqualZero()) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
-		//if (cnt == 400) { 
-		//	arrayVisualizer.stepInsert = 0; 
-		//	arrayVisualizer.n++;
-		//	for (int i = 0; i < 100; i++) 
-		//		arrayVisualizer.tempArr[i] = arrayVisualizer.arr[i]; 
-		//}
-		//if (cnt == 300) { arrayVisualizer.insert(1,"23"); }
-		if (SDL_PollEvent(&e)) {
-			ImGui_ImplSDL2_ProcessEvent(&e);
-			switch (e.type) {
-			case SDL_QUIT:
-				quit = true;
-				quitGame();
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				if (highlightIdx != -1) {
-					shownImGuiWindow = true;
-					activeElem = highlightIdx;
-				}
-				if (arrayVisualizer.checkAnyStep() && e.button.x > 850 && e.button.x < 950 && e.button.y > 500 && e.button.y < 550) {
-					if (arrayVisualizer.stepInsert >= 0) {
-						for (int i = 0; i < 100; i++)
-							arrayVisualizer.arr[i] = arrayVisualizer.tempArr[i];
-						arrayVisualizer.insertNoVisual(idx, val);
-					}
-					else if (arrayVisualizer.stepDelete >= 0) {
-						for (int i = 0; i < 100; i++)
-							arrayVisualizer.arr[i] = arrayVisualizer.tempArr[i];
-						arrayVisualizer.delNoVisual(idx);
-					}
-					else if (arrayVisualizer.stepUpdate >= 0) {
-						for (int i = 0; i < 100; i++)
-							arrayVisualizer.arr[i] = arrayVisualizer.tempArr[i];
-						arrayVisualizer.arr[idx].val = val;
-					}
-					arrayVisualizer.resetStep();
-					break;
-				}
-				if (arrayVisualizer.checkAnyStep()) break;
-				leftMouseDown = true;
-				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
-				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
-					vector<string> tempArray = initializeFormInput();
-					arrayVisualizer.resetStep();
-					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
-						arrayVisualizer.initialize(tempArray);
-				}
-				else if (e.button.x > 200 && e.button.x < 400 && e.button.y > 530 && e.button.y < 630) {
-					bool checkStep;
-					bool isValid;
-					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png", arrayVisualizer.n + 1);
-					arrayVisualizer.resetStep();
-					if (isValid) {
-						if (checkStep) {
-							arrayVisualizer.n++;
-							arrayVisualizer.stepInsert = 0;
-							guideTextVisible = true;
-							for (int i = 0; i < 100; i++)
-								arrayVisualizer.tempArr[i] = arrayVisualizer.arr[i];
-						}
-						else {
-							arrayVisualizer.insert(idx, val);
-						}
-					}
-				}
-				else if (e.button.x > 400 && e.button.x < 600 && e.button.y > 530 && e.button.y < 630) {
-					bool checkStep;
-					bool isValid;
-					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png", arrayVisualizer.n);
-					arrayVisualizer.resetStep();
-					if (isValid) {
-						if (checkStep) {
-							arrayVisualizer.n--;
-							arrayVisualizer.stepDelete = 0;
-							guideTextVisible = true;
-							for (int i = 0; i < 100; i++)
-								arrayVisualizer.tempArr[i] = arrayVisualizer.arr[i];
-						}
-						else {
-							arrayVisualizer.delIndex(idx);
-						}
-					}
-				}
-				else if (e.button.x > 600 && e.button.x < 800 && e.button.y > 530 && e.button.y < 630) {
-					bool checkStep;
-					bool isValid;
-					tie(val, checkStep, isValid) = valueFormInput("SearchForm.png");
-					arrayVisualizer.resetStep();
-					if (isValid) {
-						if (checkStep) {
-							arrayVisualizer.stepSearch = 0;
-							guideTextVisible = true;
-							for (int i = 0; i < 100; i++)
-								arrayVisualizer.tempArr[i] = arrayVisualizer.arr[i];
-						}
-						else {
-							arrayVisualizer.search(val);
-						}
-					}
-				}
-				else if (e.button.x > 800 && e.button.x < 1000 && e.button.y > 530 && e.button.y < 630) {
-					bool checkStep;
-					bool isValid;
-					tie(idx, val, checkStep, isValid) = indexValueFormInput("UpdateForm.png", arrayVisualizer.n);
-					arrayVisualizer.resetStep();
-					if (isValid) {
-						if (checkStep) {
-							arrayVisualizer.stepUpdate = 0;
-							guideTextVisible = true;
-							for (int i = 0; i < 100; i++)
-								arrayVisualizer.tempArr[i] = arrayVisualizer.arr[i];
-						}
-						else {
-							arrayVisualizer.update(idx, val);
-						}
-					}
-				}
-			case SDL_KEYDOWN:
-				if (e.key.keysym.sym == SDLK_LEFT) {
-					if (arrayVisualizer.stepInsert >= 0) {
-						arrayVisualizer.stepInsert = max(arrayVisualizer.stepInsert - 1, 0);
-						if (arrayVisualizer.stepInsert > 0) {
-							arrayVisualizer.insertStep(idx, val, arrayVisualizer.stepInsert, arrayVisualizer.n - 1);
-						}
-					}
-					else if (arrayVisualizer.stepDelete >= 0) {
-						arrayVisualizer.stepDelete = max(arrayVisualizer.stepDelete - 1, 0);
-						if (arrayVisualizer.stepDelete > 0) {
-							arrayVisualizer.delIndexStep(idx, arrayVisualizer.stepDelete, arrayVisualizer.n + 1);
-						}
-					}
-					else if (arrayVisualizer.stepSearch >= 0) {
-						arrayVisualizer.stepSearch = max(arrayVisualizer.stepSearch - 1, 0);
-						if (arrayVisualizer.stepSearch > 0) {
-							arrayVisualizer.searchStep(val, arrayVisualizer.stepSearch, arrayVisualizer.n);
-						}
-					}
-					else if (arrayVisualizer.stepUpdate >= 0) {
-						arrayVisualizer.stepUpdate = max(arrayVisualizer.stepUpdate - 1, 0);
-						if (arrayVisualizer.stepUpdate > 0) {
-							arrayVisualizer.updateStep(idx, val, arrayVisualizer.stepUpdate, arrayVisualizer.n);
-						}
-					}
-
-				}
-				else if (e.key.keysym.sym == SDLK_RIGHT) {
-					if (arrayVisualizer.stepInsert >= 0) {
-						arrayVisualizer.stepInsert = min(arrayVisualizer.stepInsert + 1, arrayVisualizer.maxStep);
-						arrayVisualizer.insertStep(idx, val, arrayVisualizer.stepInsert, arrayVisualizer.n - 1);
-					}
-					else if (arrayVisualizer.stepDelete >= 0) {
-						arrayVisualizer.stepDelete = min(arrayVisualizer.stepDelete + 1, arrayVisualizer.maxStep);
-						arrayVisualizer.delIndexStep(idx, arrayVisualizer.stepDelete, arrayVisualizer.n + 1);
-					}
-					else if (arrayVisualizer.stepSearch >= 0) {
-						arrayVisualizer.stepSearch = min(arrayVisualizer.stepSearch + 1, arrayVisualizer.maxStep);
-						arrayVisualizer.searchStep(val, arrayVisualizer.stepSearch, arrayVisualizer.n);
-					}
-					else if (arrayVisualizer.stepUpdate >= 0) {
-						arrayVisualizer.stepUpdate = min(arrayVisualizer.stepUpdate + 1, arrayVisualizer.maxStep);
-						arrayVisualizer.updateStep(idx, val, arrayVisualizer.stepUpdate, arrayVisualizer.n);
-					}
-				}
-			}
-		}
-		ImGui::Render();
-		SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
-		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
-		SDL_RenderPresent(gRenderer);
-	}
-	SDL_DestroyTexture(buttonSpriteSheet);
-	TTF_CloseFont(generalFont);
-	ImGui_ImplSDLRenderer_Shutdown();
-	ImGui_ImplSDL2_Shutdown();
-	ImGui::DestroyContext();
-	return;
-}
-void dynamicArrayVisualizing() {
-	SDL_Event e;
-	SDL_Rect rect;
-	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
-	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 200);
-	SDL_Rect buttonPosArray[15][2];
-	for (int i = 0; i < 8; i++) {
-		buttonPosArray[i][0] = *createRect(&rect, 829, 165 + 144 * i, 200, 100);
-		buttonPosArray[i][1] = *createRect(&rect, 559, 165 + 144 * i, 200, 100);
-
 	}
 	buttonPosArray[10][0] = *createRect(&rect, 2000, 1029, 50, 50);
 	buttonPosArray[10][1] = *createRect(&rect, 1819, 1029, 50, 50);
 	bool quit = false;
 	bool leftMouseDown = false;
 	SDL_Color bgColor = theme.getBgColor();
-	DynamicArrayVisualizer arrayVisualizer;
+	StaticArrayVisualizer arrayVisualizer;
 	vector<string> v = { "11","23","24","35" };
 	arrayVisualizer.initialize(v);
 	int cnt = 0;
-	bool isKeyPress = false;
-	int delay = -1;
 	int idx = -1;
-	bool guideTextVisible = false;
 	string val = "";
 	int highlightIdx = -1;
 	int activeNode = -1;
@@ -6499,9 +6647,6 @@ void dynamicArrayVisualizing() {
 		if (activeNode != -1 && shownImGuiWindow) {
 			ImGuiChangeColorArrElem(arrayVisualizer.arr[activeNode], shownImGuiWindow);
 		}
-		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
-		if (isKeyPress) guideTextVisible = false;
-		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 		if (SDL_PollEvent(&e)) {
 			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
@@ -6515,11 +6660,125 @@ void dynamicArrayVisualizing() {
 					shownImGuiWindow = true;
 					activeNode = highlightIdx;
 				}
-
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
-					//arrayVisualizer.resetStep();
+					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
+						arrayVisualizer.initialize(tempArray);
+				}
+				else if (e.button.x > 200 && e.button.x < 400 && e.button.y > 530 && e.button.y < 630) {
+					bool checkStep;
+					bool isValid;
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("InsertForm.png", arrayVisualizer.size + 1);
+					if (isValid) {
+						arrayVisualizer.insertStep(idx, val, checkStep);
+					}
+				}
+				else if (e.button.x > 400 && e.button.x < 600 && e.button.y > 530 && e.button.y < 630) {
+					bool checkStep;
+					bool isValid;
+					tie(idx, checkStep, isValid) = indexFormInput("DeleteForm.png", arrayVisualizer.size);
+					if (isValid) {
+						arrayVisualizer.deleteStep(idx, checkStep);
+					}
+				}
+				else if (e.button.x > 600 && e.button.x < 800 && e.button.y > 530 && e.button.y < 630) {
+					bool checkStep;
+					bool isValid;
+					tie(val, checkStep, isValid) = valueFormInput("SearchForm.png");
+					if (isValid) {
+						arrayVisualizer.searchStep(val, checkStep);
+					}
+				}
+				else if (e.button.x > 800 && e.button.x < 1000 && e.button.y > 530 && e.button.y < 630) {
+					bool checkStep;
+					bool isValid;
+					tie(idx, val, checkStep, isValid) = indexValueFormInput("UpdateForm.png", arrayVisualizer.size);
+					if (isValid) {
+						arrayVisualizer.updateStep(idx, val, checkStep);
+					}
+				}
+			}
+		}
+		ImGui::Render();
+		SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+		SDL_RenderPresent(gRenderer);
+	}
+	SDL_DestroyTexture(buttonSpriteSheet);
+	TTF_CloseFont(generalFont);
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
+	return;
+}
+void dynamicArrayVisualizing() {
+	SDL_Event e;
+	SDL_Rect rect;
+	SDL_Texture* buttonSpriteSheet = loadImgTexture("resources/Button/ButtonSpriteSheet.png");
+	TTF_Font* generalFont = TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 200);
+	SDL_Rect buttonPosArray[15][2];
+	for (int i = 0; i < 8; i++) {
+		buttonPosArray[i][0] = *createRect(&rect, 829, 165 + 144 * i, 200, 100);
+		buttonPosArray[i][1] = *createRect(&rect, 559, 165 + 144 * i, 200, 100);
+	}
+	buttonPosArray[10][0] = *createRect(&rect, 2000, 1029, 50, 50);
+	buttonPosArray[10][1] = *createRect(&rect, 1819, 1029, 50, 50);
+	bool quit = false;
+	bool leftMouseDown = false;
+	SDL_Color bgColor = theme.getBgColor();
+	DynamicArrayVisualizer arrayVisualizer;
+	vector<string> v = { "11","23","24","35" };
+	arrayVisualizer.initialize(v);
+	int cnt = 0;
+	int idx = -1;
+	string val = "";
+	int highlightIdx = -1;
+	int activeNode = -1;
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	ImGui::StyleColorsDark();
+	ImGui_ImplSDL2_InitForSDLRenderer(window, gRenderer);
+	ImGui_ImplSDLRenderer_Init(gRenderer);
+	bool shownImGuiWindow = true;
+	while (!quit) {
+		cnt++;
+		SDL_RenderClear(gRenderer);
+		SDL_SetRenderDrawColor(gRenderer, bgColor.r, bgColor.g, bgColor.b, 255);
+		ImGui_ImplSDLRenderer_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
+		SDL_RenderFillRect(gRenderer, &SCREEN);
+		arrayVisualizer.visualize();
+		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 0, 530, 200, 100, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], false, 200, 530, 200, 100, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 400, 530, 200, 100, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[3][0], &buttonPosArray[3][1], false, 600, 530, 200, 100, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 800, 530, 200, 100, NULL);
+		createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
+		highlightIdx = highlightArrElem(100, 100, YELLOW, arrayVisualizer.size);
+		if (activeNode != -1 && shownImGuiWindow) {
+			ImGuiChangeColorArrElem(arrayVisualizer.arr[activeNode], shownImGuiWindow);
+		}
+		if (SDL_PollEvent(&e)) {
+			ImGui_ImplSDL2_ProcessEvent(&e);
+			switch (e.type) {
+			case SDL_QUIT:
+				quit = true;
+				quitGame();
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				leftMouseDown = true;
+				if (highlightIdx != -1) {
+					shownImGuiWindow = true;
+					activeNode = highlightIdx;
+				}
+				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
+				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
+					vector<string> tempArray = initializeFormInput();
 					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
 						arrayVisualizer.initialize(tempArray);
 				}
@@ -6579,7 +6838,6 @@ void linkedListVisualizing() {
 	for (int i = 0; i < 8; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 165 + 144 * i, 200, 100);
 		buttonPosArray[i][1] = *createRect(&rect, 559, 165 + 144 * i, 200, 100);
-
 	}
 	buttonPosArray[10][0] = *createRect(&rect, 2000, 1029, 50, 50);
 	buttonPosArray[10][1] = *createRect(&rect, 1819, 1029, 50, 50);
@@ -6590,10 +6848,7 @@ void linkedListVisualizing() {
 	vector<string> v = { "11","23","24","35" };
 	listVisualizer.initialize(v);
 	int cnt = 0;
-	bool isKeyPress = false;
-	int delay = -1;
 	int idx = -1;
-	bool guideTextVisible = false;
 	string val = "";
 	int highlightIdx = -1;
 	int activeNode = -1;
@@ -6625,9 +6880,6 @@ void linkedListVisualizing() {
 		if (activeNode != -1 && shownImGuiWindow) {
 			ImGuiChangeColorNode(listVisualizer.getNode(activeNode),shownImGuiWindow);
 		}
-		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
-		if (isKeyPress) guideTextVisible = false;
-		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 		if (SDL_PollEvent(&e)) {
 			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
@@ -6641,11 +6893,9 @@ void linkedListVisualizing() {
 					shownImGuiWindow = true;
 					activeNode = highlightIdx;
 				}
-				
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
-					//arrayVisualizer.resetStep();
 					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
 						listVisualizer.initialize(tempArray);
 				}
@@ -6711,7 +6961,6 @@ void circularLinkedListVisualizing() {
 	for (int i = 0; i < 8; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 165 + 144 * i, 200, 100);
 		buttonPosArray[i][1] = *createRect(&rect, 559, 165 + 144 * i, 200, 100);
-
 	}
 	buttonPosArray[10][0] = *createRect(&rect, 2000, 1029, 50, 50);
 	buttonPosArray[10][1] = *createRect(&rect, 1819, 1029, 50, 50);
@@ -6722,10 +6971,7 @@ void circularLinkedListVisualizing() {
 	vector<string> v = { "11","23","24","35" };
 	listVisualizer.initialize(v);
 	int cnt = 0;
-	bool isKeyPress = false;
-	int delay = -1;
 	int idx = -1;
-	bool guideTextVisible = false;
 	string val = "";
 	int highlightIdx = -1;
 	int activeNode = -1;
@@ -6753,13 +6999,10 @@ void circularLinkedListVisualizing() {
 		createButton(buttonSpriteSheet, &buttonPosArray[3][0], &buttonPosArray[3][1], false, 600, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 800, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
-		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
 		highlightIdx = highlightNode(false, 100, 100, YELLOW, listVisualizer.listSize);
 		if (activeNode != -1 && shownImGuiWindow) {
 			ImGuiChangeColorNode(listVisualizer.getNode(activeNode), shownImGuiWindow);
 		}
-		if (isKeyPress) guideTextVisible = false;
-		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 		if (SDL_PollEvent(&e)) {
 			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
@@ -6776,7 +7019,6 @@ void circularLinkedListVisualizing() {
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
-					//arrayVisualizer.resetStep();
 					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
 						listVisualizer.initialize(tempArray);
 				}
@@ -6850,7 +7092,6 @@ void doublyLinkedListVisualizing() {
 	for (int i = 0; i < 8; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 165 + 144 * i, 200, 100);
 		buttonPosArray[i][1] = *createRect(&rect, 559, 165 + 144 * i, 200, 100);
-
 	}
 	buttonPosArray[10][0] = *createRect(&rect, 2000, 1029, 50, 50);
 	buttonPosArray[10][1] = *createRect(&rect, 1819, 1029, 50, 50);
@@ -6861,10 +7102,7 @@ void doublyLinkedListVisualizing() {
 	vector<string> v = { "11","23","24","35" };
 	listVisualizer.initialize(v);
 	int cnt = 0;
-	bool isKeyPress = false;
-	int delay = -1;
 	int idx = -1;
-	bool guideTextVisible = false;
 	string val = "";
 	int highlightIdx = -1;
 	int activeNode = -1;
@@ -6892,13 +7130,10 @@ void doublyLinkedListVisualizing() {
 		createButton(buttonSpriteSheet, &buttonPosArray[3][0], &buttonPosArray[3][1], false, 600, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 800, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
-		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
 		highlightIdx = highlightNode(false, 100, 100, YELLOW, listVisualizer.listSize);
 		if (activeNode != -1 && shownImGuiWindow) {
 			ImGuiChangeColorDoublyNode(listVisualizer.getNode(activeNode), shownImGuiWindow);
 		}
-		if (isKeyPress) guideTextVisible = false;
-		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 50, 250, 900, 40);
 		if (SDL_PollEvent(&e)) {
 			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
@@ -6915,7 +7150,6 @@ void doublyLinkedListVisualizing() {
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
-					//arrayVisualizer.resetStep();
 					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
 						listVisualizer.initialize(tempArray);
 				}
@@ -6987,7 +7221,6 @@ void stackVisualizing() {
 	for (int i = 0; i < 8; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 165 + 144 * i, 200, 100);
 		buttonPosArray[i][1] = *createRect(&rect, 559, 165 + 144 * i, 200, 100);
-
 	}
 	for (int i = 8; i < 10; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 1317 + 144 * (i - 8), 200, 66);
@@ -7004,13 +7237,11 @@ void stackVisualizing() {
 	SDL_Color bgColor = theme.getBgColor();
 	stackVisualizer.initialize(v);
 	int cnt = 0;
-	bool isKeyPress = false;
-	int delay = -1;
 	int idx = -1;
-	bool guideTextVisible = false;
 	string val = "";
 	int highlightIdx = -1;
 	int activeNode = -1;
+	int activeButton = -1;
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -7036,25 +7267,21 @@ void stackVisualizing() {
 		createButton(buttonSpriteSheet, &buttonPosArray[6][0], &buttonPosArray[6][1], false, 400, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[11][0], &buttonPosArray[11][1], false, 600, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
-		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
 		highlightIdx = highlightNode(true, 100, 100, YELLOW, stackVisualizer.listSize);
 		if (activeNode != -1 && shownImGuiWindow) {
 			ImGuiChangeColorNode(stackVisualizer.getNode(activeNode), shownImGuiWindow);
 		}
-		if (isKeyPress) guideTextVisible = false;
-		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 200, 250, 800, 40);
 		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
 		if (ImGui::BeginPopupModal("Visualizing method", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::SetCursorPosX((ImGui::GetWindowSize().x - 7 * 10) / 2);
 			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "RUN METHOD");
 			if (ImGui::Button("Run step-by-step")) {
 				ImGui::CloseCurrentPopup();
-				if (clear)	stackVisualizer.clearStep(true);
+				if (clear)	activeButton = 1;
 				else {
 					if(stackVisualizer.listSize!=0) {
-						stackVisualizer.popStep(true);
+						activeButton = 2;
 					}
 				}
 			}
@@ -7062,10 +7289,10 @@ void stackVisualizing() {
 			ImGui::SameLine();
 			if (ImGui::Button("Run all-at-once ")) {
 				ImGui::CloseCurrentPopup();
-				if (clear)	stackVisualizer.clearStep(false);
+				if (clear)	activeButton = 3;
 				else {
 					if (stackVisualizer.listSize != 0) {
-						stackVisualizer.popStep(false);
+						activeButton = 4;
 					}
 				}
 			}
@@ -7075,7 +7302,27 @@ void stackVisualizing() {
 			}
 			ImGui::EndPopup();
 		}
-
+		switch (activeButton)
+		{
+		case 1:
+			stackVisualizer.clearStep(true);
+			activeButton = -1;
+			break;
+		case 2:
+			stackVisualizer.popStep(true);
+			activeButton = -1;
+			break;
+		case 3:
+			stackVisualizer.clearStep(false);
+			activeButton = -1;
+			break;
+		case 4:
+			stackVisualizer.popStep(false);
+			activeButton = -1;
+			break;
+		default:
+			break;
+		}
 		if (SDL_PollEvent(&e)) {
 			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
@@ -7092,7 +7339,6 @@ void stackVisualizing() {
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
-					//arrayVisualizer.resetStep();
 					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
 						stackVisualizer.initialize(tempArray);
 				}
@@ -7112,7 +7358,6 @@ void stackVisualizing() {
 					ImGui::OpenPopup("Visualizing method");
 					clear = true;
 				}
-
 			}
 		}
 		ImGui::Render();
@@ -7138,7 +7383,6 @@ void queueVisualizing() {
 	for (int i = 0; i < 8; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 165 + 144 * i, 200, 100);
 		buttonPosArray[i][1] = *createRect(&rect, 559, 165 + 144 * i, 200, 100);
-
 	}
 	for (int i = 8; i < 10; i++) {
 		buttonPosArray[i][0] = *createRect(&rect, 829, 1317 + 144 * (i - 8), 200, 66);
@@ -7155,10 +7399,8 @@ void queueVisualizing() {
 	vector<string> v = { "11","23","24","35" };
 	queueVisualizer.initialize(v);
 	int cnt = 0;
-	bool isKeyPress = false;
-	int delay = -1;
 	int idx = -1;
-	bool guideTextVisible = false;
+	int activeButton = -1;
 	string val = "";
 	int highlightIdx = -1;
 	int activeNode = -1;
@@ -7186,28 +7428,26 @@ void queueVisualizing() {
 		createButton(buttonSpriteSheet, &buttonPosArray[6][0], &buttonPosArray[6][1], false, 400, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[11][0], &buttonPosArray[11][1], false, 600, 530, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[10][0], &buttonPosArray[10][1], false, 0, 0, 50, 50, NULL);
-		//isKeyPress = arrayVisualizer.keyboardEvent(idx, val);
 		highlightIdx = highlightNode(false, 100, 100, YELLOW, queueVisualizer.listSize);
 		if (activeNode != -1 && shownImGuiWindow) {
 			ImGuiChangeColorNode(queueVisualizer.getNode(activeNode), shownImGuiWindow);
 		}
 		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
 		if (ImGui::BeginPopupModal("Visualizing method", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::SetCursorPosX((ImGui::GetWindowSize().x - 7 * 10) / 2);
 			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "RUN METHOD");
 			if (ImGui::Button("Run step-by-step")) {
 				ImGui::CloseCurrentPopup();
-				if (clear)	queueVisualizer.clearStep(true);
-				else if(queueVisualizer.listSize!=0 ) queueVisualizer.popStep(true);
+				if (clear)	activeButton=1;
+				else if(queueVisualizer.listSize!=0 ) activeButton = 2;
 			}
 			ImGui::SetItemDefaultFocus();
 			ImGui::SameLine();
 			if (ImGui::Button("Run all-at-once ")) {
 				ImGui::CloseCurrentPopup();
-				if (clear)	queueVisualizer.clearStep(false);
-				else if (queueVisualizer.listSize != 0) queueVisualizer.popStep(false);
+				if (clear)	activeButton = 3;
+				else if (queueVisualizer.listSize != 0) activeButton = 4;
 			}
 			ImGui::SetCursorPosX((ImGui::GetWindowSize().x - 5 * 9) / 2);
 			if (ImGui::Button("Close")) {
@@ -7215,8 +7455,27 @@ void queueVisualizing() {
 			}
 			ImGui::EndPopup();
 		}
-		if (isKeyPress) guideTextVisible = false;
-		if (guideTextVisible) createText(generalFont, BLACK, "<Use LEFT ARROW key(<-) or RIGHT ARROW key(->) to change steps>", 200, 250, 800, 40);
+		switch (activeButton)
+		{
+		case 1:
+			queueVisualizer.clearStep(true);
+			activeButton = -1;
+			break;
+		case 2:
+			queueVisualizer.popStep(true);
+			activeButton = -1;
+			break;
+		case 3:
+			queueVisualizer.clearStep(false);
+			activeButton = -1;
+			break;
+		case 4:
+			queueVisualizer.popStep(false);
+			activeButton = -1;
+			break;
+		default:
+			break;
+		}
 		if (SDL_PollEvent(&e)) {
 			ImGui_ImplSDL2_ProcessEvent(&e);
 			switch (e.type) {
@@ -7233,7 +7492,6 @@ void queueVisualizing() {
 				if (e.button.x > 0 && e.button.x < 50 && e.button.y > 0 && e.button.y < 50) quit = true;
 				else if (e.button.x > 0 && e.button.x < 200 && e.button.y > 530 && e.button.y < 630) {
 					vector<string> tempArray = initializeFormInput();
-					//arrayVisualizer.resetStep();
 					if ((tempArray.size() != 0 && tempArray[0] != "Keep") || (tempArray.size() == 0))
 						queueVisualizer.initialize(tempArray);
 				}
@@ -7256,7 +7514,6 @@ void queueVisualizing() {
 					ImGui::OpenPopup("Visualizing method");
 					clear = true;
 				}
-
 			}
 		}
 		ImGui::Render();
@@ -7284,7 +7541,6 @@ void linkedListMenu() {
 	}
 	buttonPosArray[3][0] = *createRect(&rect, 2000, 1029, 50, 50);
 	buttonPosArray[3][1] = *createRect(&rect, 1819, 1029, 50, 50);
-
 	bool quit = false;
 	bool leftMouseDown = false;
 	while (!quit) {
@@ -7309,8 +7565,6 @@ void linkedListMenu() {
 			}
 		}
 		SDL_RenderPresent(gRenderer);
-
-
 	}
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(background);
@@ -7328,7 +7582,6 @@ void arrayMenu() {
 	}
 	buttonPosArray[2][0] = *createRect(&rect, 2000, 1029, 50, 50);
 	buttonPosArray[2][1] = *createRect(&rect, 1819, 1029, 50, 50);
-
 	bool quit = false;
 	bool leftMouseDown = false;
 	while (!quit) {
@@ -7336,7 +7589,6 @@ void arrayMenu() {
 		SDL_RenderCopy(gRenderer, background, NULL, &SCREEN);
 		createButton(buttonSpriteSheet, &buttonPosArray[0][0], &buttonPosArray[0][1], false, 300, 100, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], false, 400, 210, 200, 100, NULL);
-		//createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 300, 320, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 0, 0, 50, 50, NULL);
 		if (SDL_PollEvent(&e)) {
 			switch (e.type) {
@@ -7352,8 +7604,6 @@ void arrayMenu() {
 			}
 		}
 		SDL_RenderPresent(gRenderer);
-
-
 	}
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(background);
@@ -7418,11 +7668,6 @@ void themeOptions() {
 		createButton(buttonSpriteSheet, &back, &backHover, false, 0, 0, 50, 50, NULL);
 		createButton(buttonSpriteSheet, &custom, &customHover, false, 722, 380, 132, 46, NULL);
 		createText(numberFont, BLACK, to_string(textSize), 275, 390, 2 * 10, 20);
-		/*for (int i = 0; i < 5; i++) {
-			SDL_SetRenderDrawColor(gRenderer, 0, 255, 0, 255);
-			SDL_RenderDrawRect(gRenderer, createRect(&rect,xMap[choice[i]],80+60*i,95,32));
-			SDL_SetRenderDrawColor(gRenderer, 255, 255, 0, 255);
-		}*/
 		if (ImGuiWindowVisible) {
 			ImGuiChangeColorElem(choice, textSize, ImGuiWindowVisible);
 		}
@@ -7434,7 +7679,6 @@ void themeOptions() {
 			}
 		}
 		SDL_SetRenderDrawColor(gRenderer, choice[0].r, choice[0].g, choice[0].b, choice[0].a);
-
 		SDL_RenderFillRect(gRenderer, createRect(&rect, 324, 467, 360, 160));
 		SDL_SetRenderDrawColor(gRenderer, 255, 255, 0, 255);
 		demoNode->setColorNode(choice[3]);
@@ -7520,11 +7764,8 @@ void themeOptions() {
 		SDL_RenderSetScale(gRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
 		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 		SDL_RenderPresent(gRenderer);
-
-
 	}
 	SDL_SetRenderDrawColor(gRenderer, old.r, old.g, old.b, old.a);
-	//Theme(SDL_Color bgColor, SDL_Color bgElemColor, SDL_Color textColor,SDL_Color elemColor,SDL_Color arrowColor, int textSize)
 	if (!checkBack) {
 		theme.setBgColor(choice[0]);
 		theme.setBgElemColor(choice[1]);
@@ -7532,7 +7773,6 @@ void themeOptions() {
 		theme.setElemColor(choice[3]);
 		theme.setArrowColor(choice[4]);
 		theme.setTextSize(textSize);
-
 	}
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(themeOptions);
@@ -7563,7 +7803,6 @@ void mainMenu() {
 		createButton(buttonSpriteSheet, &buttonPosArray[1][0], &buttonPosArray[1][1], false, 400, 210, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[2][0], &buttonPosArray[2][1], false, 300, 320, 200, 100, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[3][0], &buttonPosArray[3][1], false, 400, 430, 200, 100, NULL);
-		//createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 875, 515, 109, 118, NULL);
 		createButton(buttonSpriteSheet, &buttonPosArray[4][0], &buttonPosArray[4][1], false, 875, 10, 109, 118, NULL);
 		if (SDL_PollEvent(&e)) {
 			switch (e.type) {
@@ -7581,8 +7820,6 @@ void mainMenu() {
 			}
 		}
 		SDL_RenderPresent(gRenderer);
-
-
 	}
 	SDL_DestroyTexture(buttonSpriteSheet);
 	SDL_DestroyTexture(background);
@@ -7594,5 +7831,4 @@ int main(int, char**)
 	numberFont= TTF_OpenFont("resources/Font/SpaceMono-Regular.ttf", 300);
 	mainMenu();
 	return 0;
-
 }
